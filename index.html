@@ -14,7 +14,7 @@
       user-select: none;
     }
     .safe-bottom {
-      padding-bottom: max(1.5rem, env(safe-area-inset-bottom));
+      padding-bottom: max(1rem, env(safe-area-inset-bottom));
     }
     .no-scrollbar::-webkit-scrollbar {
       display: none;
@@ -23,73 +23,72 @@
       -ms-overflow-style: none;
       scrollbar-width: none;
     }
-    /* モバイルでのズーム防止: input/textarea は最低16px (text-base) */
+    /* モバイルでのズーム防止: input/textarea/select は最低16px (text-base) */
     input, textarea, select {
       font-size: 16px !important;
     }
     /* Rich Text Preview HTML Styling */
     .html-preview-content {
-      font-size: 15px;
+      font-size: 14px;
       line-height: 1.6;
       color: #334155;
     }
-    .html-preview-content h1 { font-size: 1.5em; font-weight: bold; margin-bottom: 0.5em; }
-    .html-preview-content h2 { font-size: 1.3em; font-weight: bold; margin-bottom: 0.5em; }
-    .html-preview-content h3 { font-size: 1.1em; font-weight: bold; margin-bottom: 0.5em; }
-    .html-preview-content p { margin-bottom: 0.75em; }
-    .html-preview-content ul { list-style-type: disc; padding-left: 1.2em; margin-bottom: 0.75em; }
-    .html-preview-content ol { list-style-type: decimal; padding-left: 1.2em; margin-bottom: 0.75em; }
-    .html-preview-content img { max-width: 100%; height: auto; border-radius: 0.5rem; margin: 0.5rem 0; }
+    .html-preview-content h1 { font-size: 1.4em; font-weight: bold; margin-bottom: 0.4em; }
+    .html-preview-content h2 { font-size: 1.25em; font-weight: bold; margin-bottom: 0.4em; }
+    .html-preview-content h3 { font-size: 1.1em; font-weight: bold; margin-bottom: 0.4em; }
+    .html-preview-content p { margin-bottom: 0.6em; }
+    .html-preview-content ul { list-style-type: disc; padding-left: 1.2em; margin-bottom: 0.6em; }
+    .html-preview-content ol { list-style-type: decimal; padding-left: 1.2em; margin-bottom: 0.6em; }
+    .html-preview-content img { max-width: 100%; height: auto; border-radius: 0.5rem; margin: 0.4em 0; }
     .html-preview-content a { color: #4f46e5; text-decoration: underline; }
-    .html-preview-content blockquote { border-left: 4px solid #e2e8f0; padding-left: 0.75rem; color: #64748b; font-style: italic; }
   </style>
 </head>
 <body class="bg-slate-100 text-slate-800 flex flex-col h-screen overflow-hidden font-sans">
 
   <!-- Header -->
-  <header class="bg-indigo-600 text-white px-5 py-4 flex items-center justify-between shadow-md z-10 flex-shrink-0">
-    <div class="flex items-center space-x-3">
-      <i class="fa-solid fa-paper-plane text-xl"></i>
-      <h1 class="font-bold text-lg tracking-wide">microCMS Mobile</h1>
+  <header class="bg-indigo-600 text-white px-4 py-3 flex items-center justify-between shadow-md z-10 flex-shrink-0">
+    <div class="flex items-center space-x-2.5">
+      <i class="fa-solid fa-paper-plane text-lg"></i>
+      <h1 class="font-bold text-base tracking-wide">microCMS Mobile</h1>
     </div>
-    <button id="btn-settings" class="p-2.5 rounded-full hover:bg-indigo-700 transition active:scale-95 text-indigo-100">
-      <i class="fa-solid fa-gear text-lg"></i>
+    <button id="btn-settings" class="p-2 rounded-full hover:bg-indigo-700 transition active:scale-95 text-indigo-100">
+      <i class="fa-solid fa-gear text-base"></i>
     </button>
   </header>
 
   <!-- Main Content Area -->
-  <main class="flex-1 overflow-y-auto px-4 py-5 space-y-5 no-scrollbar" id="main-content">
+  <main class="flex-1 overflow-y-auto px-3.5 py-3 space-y-3 no-scrollbar" id="main-content">
 
     <!-- Setup Banner -->
-    <div id="setup-banner" class="bg-white rounded-3xl p-7 shadow-sm border border-indigo-100 text-center space-y-4 my-auto max-w-md mx-auto">
-      <div class="w-16 h-16 bg-indigo-50 rounded-2xl flex items-center justify-center mx-auto text-indigo-600">
-        <i class="fa-solid fa-sliders text-2xl"></i>
+    <div id="setup-banner" class="bg-white rounded-2xl p-5 shadow-sm border border-indigo-100 text-center space-y-3 my-auto max-w-md mx-auto">
+      <div class="w-12 h-12 bg-indigo-50 rounded-xl flex items-center justify-center mx-auto text-indigo-600">
+        <i class="fa-solid fa-sliders text-xl"></i>
       </div>
-      <div class="space-y-1.5">
-        <h2 class="font-bold text-slate-800 text-lg">API接続設定が必要です</h2>
+      <div class="space-y-1">
+        <h2 class="font-bold text-slate-800 text-base">API接続設定が必要です</h2>
         <p class="text-xs text-slate-500 leading-relaxed">右上の設定ボタンから サービスDomain、API Key、エンドポイント名を入力してください。</p>
       </div>
-      <button onclick="openSettingsModal()" class="w-full bg-indigo-600 hover:bg-indigo-700 text-white font-bold py-3.5 rounded-2xl text-base shadow-md active:scale-98 transition">
+      <button onclick="openSettingsModal()" class="w-full bg-indigo-600 hover:bg-indigo-700 text-white font-bold py-2.5 rounded-xl text-sm shadow-md active:scale-98 transition">
         設定を開く
       </button>
     </div>
 
     <!-- Content List Container -->
-    <div id="content-container" class="hidden space-y-4 max-w-2xl mx-auto">
+    <div id="content-container" class="hidden space-y-3 max-w-2xl mx-auto">
       <!-- Search & Create Header -->
-      <div class="flex items-center justify-between gap-3">
+      <div class="flex items-center justify-between gap-2.5">
         <div class="relative flex-1">
-          <i class="fa-solid fa-magnifying-glass absolute left-4 top-1/2 -translate-y-1/2 text-slate-400 text-base"></i>
-          <input type="text" id="search-input" placeholder="タイトルやIDで検索..." class="w-full pl-11 pr-4 py-3.5 bg-white rounded-2xl border border-slate-200 focus:outline-none focus:ring-2 focus:ring-indigo-500 shadow-sm">
+          <i class="fa-solid fa-magnifying-glass absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-400 text-xs"></i>
+          <input type="text" id="search-input" placeholder="検索..." class="w-full pl-9 pr-3 py-2 bg-white rounded-xl border border-slate-200 focus:outline-none focus:ring-2 focus:ring-indigo-500 shadow-sm text-sm">
         </div>
-        <button id="btn-create" class="bg-indigo-600 hover:bg-indigo-700 text-white px-5 py-3.5 rounded-2xl font-bold flex items-center gap-2 shadow-md active:scale-95 transition whitespace-nowrap text-base">
-          <i class="fa-solid fa-plus"></i>
+        <button id="btn-create" class="bg-indigo-600 hover:bg-indigo-700 text-white px-4 py-2 rounded-xl font-bold flex items-center gap-1.5 shadow-md active:scale-95 transition whitespace-nowrap text-sm">
+          <i class="fa-solid fa-plus text-xs"></i>
           <span>新規</span>
         </button>
       </div>
 
       <!-- Item Cards List -->
-      <div id="items-list" class="space-y-4 pb-24">
+      <div id="items-list" class="space-y-2.5 pb-16">
         <!-- JS-driven content -->
       </div>
     </div>
@@ -98,37 +97,43 @@
 
   <!-- Settings Modal -->
   <div id="modal-settings" class="fixed inset-0 bg-slate-900/60 backdrop-blur-sm z-50 flex items-end sm:items-center justify-center hidden transition-opacity">
-    <div class="bg-white w-full sm:max-w-md rounded-t-3xl sm:rounded-3xl p-6 sm:p-7 shadow-2xl space-y-5 max-h-[90vh] overflow-y-auto">
-      <div class="flex items-center justify-between border-b pb-4">
-        <h2 class="font-bold text-slate-800 text-lg">microCMS 接続設定</h2>
-        <button onclick="closeSettingsModal()" class="text-slate-400 hover:text-slate-600 p-2 -mr-2">
-          <i class="fa-solid fa-xmark text-xl"></i>
+    <div class="bg-white w-full sm:max-w-md rounded-t-2xl sm:rounded-2xl p-5 shadow-2xl space-y-4 max-h-[90vh] overflow-y-auto">
+      <div class="flex items-center justify-between border-b pb-3">
+        <h2 class="font-bold text-slate-800 text-base">microCMS 接続設定</h2>
+        <button onclick="closeSettingsModal()" class="text-slate-400 hover:text-slate-600 p-1.5 -mr-1">
+          <i class="fa-solid fa-xmark text-lg"></i>
         </button>
       </div>
 
-      <div class="space-y-4">
-        <div class="space-y-1.5">
-          <label class="block font-medium text-slate-700 text-sm">サービス Domain</label>
-          <div class="flex items-center border border-slate-300 rounded-2xl px-4 py-3 bg-slate-50 focus-within:bg-white focus-within:ring-2 focus-within:ring-indigo-500">
+      <div class="space-y-3 text-sm">
+        <div class="space-y-1">
+          <label class="block font-medium text-slate-700 text-xs">サービス Domain</label>
+          <div class="flex items-center border border-slate-300 rounded-xl px-3 py-2 bg-slate-50 focus-within:bg-white focus-within:ring-2 focus-within:ring-indigo-500">
             <input type="text" id="cfg-domain" placeholder="your-service" class="w-full bg-transparent focus:outline-none">
             <span class="text-slate-400 text-xs ml-1 flex-shrink-0">.microcms.io</span>
           </div>
         </div>
 
-        <div class="space-y-1.5">
-          <label class="block font-medium text-slate-700 text-sm">API Key</label>
-          <input type="password" id="cfg-apikey" placeholder="xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx" class="w-full border border-slate-300 rounded-2xl px-4 py-3 focus:outline-none focus:ring-2 focus:ring-indigo-500">
+        <div class="space-y-1">
+          <label class="block font-medium text-slate-700 text-xs">API Key</label>
+          <input type="password" id="cfg-apikey" placeholder="xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx" class="w-full border border-slate-300 rounded-xl px-3 py-2 focus:outline-none focus:ring-2 focus:ring-indigo-500">
         </div>
 
-        <div class="space-y-1.5">
-          <label class="block font-medium text-slate-700 text-sm">エンドポイント名 (API ID)</label>
-          <input type="text" id="cfg-endpoint" placeholder="blogs や news など" class="w-full border border-slate-300 rounded-2xl px-4 py-3 focus:outline-none focus:ring-2 focus:ring-indigo-500">
+        <div class="space-y-1">
+          <label class="block font-medium text-slate-700 text-xs">メイン エンドポイント (API ID)</label>
+          <input type="text" id="cfg-endpoint" placeholder="blogs や news など" class="w-full border border-slate-300 rounded-xl px-3 py-2 focus:outline-none focus:ring-2 focus:ring-indigo-500">
+        </div>
+
+        <div class="space-y-1">
+          <label class="block font-medium text-slate-700 text-xs">参照先カテゴリ/タグ エンドポイント (任意)</label>
+          <input type="text" id="cfg-ref-endpoint" placeholder="categories (省略時も自動検知)" class="w-full border border-slate-300 rounded-xl px-3 py-2 focus:outline-none focus:ring-2 focus:ring-indigo-500">
+          <p class="text-[10px] text-slate-400">プルダウンの選択肢取得に使用します。</p>
         </div>
       </div>
 
       <div class="pt-2">
-        <button onclick="saveSettings()" class="w-full bg-indigo-600 hover:bg-indigo-700 text-white font-bold py-4 rounded-2xl shadow-md active:scale-98 transition text-base">
-          設定を保存してデータを取得
+        <button onclick="saveSettings()" class="w-full bg-indigo-600 hover:bg-indigo-700 text-white font-bold py-3 rounded-xl shadow-md active:scale-98 transition text-sm">
+          設定を保存して取得
         </button>
       </div>
     </div>
@@ -136,36 +141,36 @@
 
   <!-- Editor Modal -->
   <div id="modal-editor" class="fixed inset-0 bg-slate-900/60 backdrop-blur-sm z-50 flex items-end sm:items-center justify-center hidden">
-    <div class="bg-white w-full sm:max-w-xl rounded-t-3xl sm:rounded-3xl p-5 sm:p-7 shadow-2xl flex flex-col h-[94vh] sm:h-[88vh]">
+    <div class="bg-white w-full sm:max-w-xl rounded-t-2xl sm:rounded-2xl p-4 sm:p-5 shadow-2xl flex flex-col h-[92vh] sm:h-[86vh]">
       
       <!-- Editor Header -->
-      <div class="flex items-center justify-between border-b pb-4 flex-shrink-0">
-        <div class="flex items-center space-x-2.5">
-          <span id="editor-title" class="font-bold text-slate-800 text-lg">記事の編集</span>
-          <span id="editor-status-badge" class="px-2.5 py-1 text-xs rounded-full font-semibold bg-slate-100 text-slate-600">NEW</span>
+      <div class="flex items-center justify-between border-b pb-3 flex-shrink-0">
+        <div class="flex items-center space-x-2">
+          <span id="editor-title" class="font-bold text-slate-800 text-base">記事の編集</span>
+          <span id="editor-status-badge" class="px-2 py-0.5 text-[11px] rounded-full font-semibold bg-slate-100 text-slate-600">NEW</span>
         </div>
-        <button onclick="closeEditorModal()" class="text-slate-400 hover:text-slate-600 p-2 -mr-2">
-          <i class="fa-solid fa-xmark text-xl"></i>
+        <button onclick="closeEditorModal()" class="text-slate-400 hover:text-slate-600 p-1 -mr-1">
+          <i class="fa-solid fa-xmark text-lg"></i>
         </button>
       </div>
 
       <!-- Dynamic Form Fields -->
-      <div id="editor-fields" class="flex-1 overflow-y-auto py-5 space-y-6 no-scrollbar">
+      <div id="editor-fields" class="flex-1 overflow-y-auto py-3.5 space-y-4 no-scrollbar">
         <!-- JS-driven inputs -->
       </div>
 
       <!-- Editor Footer Actions -->
-      <div class="border-t pt-4 flex items-center justify-between gap-3 flex-shrink-0 safe-bottom">
-        <button id="btn-delete" onclick="deleteContent()" class="text-rose-600 bg-rose-50 hover:bg-rose-100 px-4 py-3.5 rounded-2xl font-bold flex items-center gap-1.5 active:scale-95 transition text-sm">
+      <div class="border-t pt-3 flex items-center justify-between gap-2.5 flex-shrink-0 safe-bottom">
+        <button id="btn-delete" onclick="deleteContent()" class="text-rose-600 bg-rose-50 hover:bg-rose-100 px-3.5 py-2.5 rounded-xl font-bold flex items-center gap-1 active:scale-95 transition text-xs">
           <i class="fa-solid fa-trash-can"></i>
           <span>削除</span>
         </button>
 
-        <div class="flex items-center gap-2.5 flex-1 justify-end">
-          <button onclick="saveContent(true)" class="bg-slate-100 hover:bg-slate-200 text-slate-700 font-bold px-4 py-3.5 rounded-2xl text-sm active:scale-95 transition">
+        <div class="flex items-center gap-2 flex-1 justify-end">
+          <button onclick="saveContent(true)" class="bg-slate-100 hover:bg-slate-200 text-slate-700 font-bold px-3.5 py-2.5 rounded-xl text-xs active:scale-95 transition">
             下書き保存
           </button>
-          <button onclick="saveContent(false)" class="bg-indigo-600 hover:bg-indigo-700 text-white font-bold px-5 py-3.5 rounded-2xl text-sm shadow-md active:scale-95 transition">
+          <button onclick="saveContent(false)" class="bg-indigo-600 hover:bg-indigo-700 text-white font-bold px-4 py-2.5 rounded-xl text-xs shadow-md active:scale-95 transition">
             公開する
           </button>
         </div>
@@ -175,7 +180,7 @@
   </div>
 
   <!-- Notification Toast -->
-  <div id="toast" class="fixed bottom-8 left-1/2 -translate-x-1/2 bg-slate-900/95 backdrop-blur-md text-white text-sm px-5 py-3.5 rounded-full shadow-2xl transition-all duration-300 opacity-0 pointer-events-none z-50 flex items-center gap-3 max-w-[90vw]">
+  <div id="toast" class="fixed bottom-6 left-1/2 -translate-x-1/2 bg-slate-900/95 backdrop-blur-md text-white text-xs px-4 py-2.5 rounded-full shadow-2xl transition-all duration-300 opacity-0 pointer-events-none z-50 flex items-center gap-2 max-w-[90vw]">
     <i id="toast-icon" class="fa-solid fa-circle-info text-indigo-400"></i>
     <span id="toast-msg" class="truncate">メッセージ</span>
   </div>
@@ -224,7 +229,8 @@
       return {
         domain: localStorage.getItem('mc_domain') || '',
         apiKey: localStorage.getItem('mc_apikey') || '',
-        endpoint: localStorage.getItem('mc_endpoint') || ''
+        endpoint: localStorage.getItem('mc_endpoint') || '',
+        refEndpoint: localStorage.getItem('mc_ref_endpoint') || ''
       };
     }
 
@@ -232,6 +238,7 @@
       localStorage.setItem('mc_domain', cfg.domain);
       localStorage.setItem('mc_apikey', cfg.apiKey);
       localStorage.setItem('mc_endpoint', cfg.endpoint);
+      localStorage.setItem('mc_ref_endpoint', cfg.refEndpoint || '');
 
       try {
         const db = await initDB();
@@ -244,8 +251,9 @@
     }
 
     // --- State Management ---
-    let config = { domain: '', apiKey: '', endpoint: '' };
+    let config = { domain: '', apiKey: '', endpoint: '', refEndpoint: '' };
     let itemsData = [];
+    let referenceCandidates = {}; // キーごとの参照選択肢を保持
     let currentEditingItem = null;
     let isCreating = false;
 
@@ -290,6 +298,9 @@
         const data = await res.json();
         itemsData = data.contents || [];
 
+        // 参照先候補データのバックグラウンド取得（設定されていれば）
+        fetchReferenceCandidates();
+
         setupBanner.classList.add('hidden');
         contentContainer.classList.remove('hidden');
 
@@ -301,17 +312,54 @@
       }
     }
 
-    // --- Format Objects / Relations ---
+    // 参照項目のプルダウン用選択肢を取得する
+    async function fetchReferenceCandidates(fieldName = 'category') {
+      const endpointToFetch = config.refEndpoint || `${fieldName}s`; // 例: category -> categories
+      if (referenceCandidates[fieldName]) return;
+
+      try {
+        const url = `https://${config.domain}.microcms.io/api/v1/${endpointToFetch}?limit=100`;
+        const res = await fetch(url, {
+          headers: { 'X-MICROCMS-API-KEY': config.apiKey }
+        });
+
+        if (res.ok) {
+          const data = await res.json();
+          referenceCandidates[fieldName] = data.contents || [];
+        }
+      } catch (e) {
+        console.warn('Failed to fetch reference options:', e);
+      }
+    }
+
+    // 人間に読みやすいタイトルを抽出するヘルパー
+    function getItemTitle(item) {
+      if (!item) return '無題';
+      if (item.title) return item.title;
+      if (item.name) return item.name;
+      if (item.question) return item.question;
+      if (item.subject) return item.subject;
+
+      // HTML/テキスト本文の頭から抽出
+      let text = item.content || item.body || item.description || '';
+      if (typeof text === 'string' && text.length > 0) {
+        const clean = text.replace(/<[^>]*>?/gm, '').trim();
+        if (clean.length > 0) return clean.substring(0, 30);
+      }
+
+      return item.id || '無題';
+    }
+
+    // 関連レコードのラベル表現ヘルパー
     function formatRelationValue(val) {
       if (val === null || val === undefined) return '';
 
       if (Array.isArray(val)) {
-        if (val.length === 0) return '（なし）';
+        if (val.length === 0) return '（未選択）';
         return val.map(v => formatRelationValue(v)).join(', ');
       }
 
       if (typeof val === 'object') {
-        if (val.url) return `[画像]`;
         if (val.name) return val.name;
         if (val.title) return val.title;
         if (val.id) return val.id;
@@ -321,91 +369,72 @@
       return String(val);
     }
 
-    // オブジェクトからID文字列またはID配列を抽出（microCMS保存用）
-    function cleanRelationData(data) {
-      if (!data) return null;
-
-      if (Array.isArray(data)) {
-        return data.map(item => cleanRelationData(item)).filter(Boolean);
-      }
-
-      if (typeof data === 'object') {
-        if (data.id) return data.id; // 単一参照はID文字列を返す
-        return null;
-      }
-
-      if (typeof data === 'string') return data.trim();
-
-      return data;
-    }
-
     // --- UI Rendering ---
     function renderList(list) {
       itemsList.innerHTML = '';
 
       if (list.length === 0) {
         itemsList.innerHTML = `
-          <div class="text-center py-16 text-slate-400 bg-white rounded-3xl border border-slate-200/60 p-6">
-            <i class="fa-regular fa-folder-open text-4xl mb-3 text-slate-300"></i>
-            <p class="text-sm font-medium">コンテンツが見つかりません</p>
+          <div class="text-center py-12 text-slate-400 bg-white rounded-2xl border border-slate-200/60 p-5">
+            <i class="fa-regular fa-folder-open text-3xl mb-2 text-slate-300"></i>
+            <p class="text-xs font-medium">コンテンツが見つかりません</p>
           </div>
         `;
         return;
       }
 
       list.forEach(item => {
-        const title = item.title || item.name || item.id || '無題';
+        const displayTitle = getItemTitle(item);
         const updatedAt = new Date(item.updatedAt || Date.now()).toLocaleDateString('ja-JP', {
-          month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit'
+          month: 'numeric', day: 'numeric', hour: '2-digit', minute: '2-digit'
         });
 
         let previewText = item.content || item.body || item.description || '';
         if (typeof previewText === 'object') {
           previewText = formatRelationValue(previewText);
         } else {
-          previewText = previewText.replace(/<[^>]*>?/gm, '').substring(0, 80);
+          previewText = previewText.replace(/<[^>]*>?/gm, '').substring(0, 60);
         }
 
+        // 関連フィールド（Categoryなど）バッジ表示
         const relationBadges = [];
         Object.keys(item).forEach(k => {
           if (['id', 'title', 'name', 'content', 'body', 'createdAt', 'updatedAt', 'publishedAt', 'revisedAt'].includes(k)) return;
           const v = item[k];
           if (typeof v === 'object' && v !== null && !v.url) {
             const label = formatRelationValue(v);
-            if (label && label !== '（なし）') {
+            if (label && label !== '（未選択）') {
               relationBadges.push({ key: k, value: label });
             }
           }
         });
 
         const card = document.createElement('div');
-        card.className = 'bg-white rounded-3xl p-5 sm:p-6 shadow-sm border border-slate-200/80 active:scale-98 transition cursor-pointer relative space-y-3 hover:border-indigo-200';
+        card.className = 'bg-white rounded-2xl p-3.5 shadow-sm border border-slate-200/80 active:scale-98 transition cursor-pointer relative space-y-2 hover:border-indigo-200';
         card.onclick = () => openEditorModal(item);
 
         card.innerHTML = `
-          <div class="flex items-start justify-between gap-3">
-            <h3 class="font-bold text-slate-800 text-base sm:text-lg line-clamp-1 flex-1 leading-snug">${escapeHtml(title)}</h3>
-            <span class="text-xs bg-indigo-50 text-indigo-600 px-3 py-1 rounded-full font-bold flex-shrink-0 border border-indigo-100">
+          <div class="flex items-center justify-between gap-2">
+            <h3 class="font-bold text-slate-800 text-sm sm:text-base line-clamp-1 flex-1 leading-tight">${escapeHtml(displayTitle)}</h3>
+            <span class="text-[10px] bg-slate-100 text-slate-500 px-2 py-0.5 rounded-md font-mono flex-shrink-0">
               ${escapeHtml(item.id)}
             </span>
           </div>
 
-          ${previewText ? `<p class="text-xs sm:text-sm text-slate-500 line-clamp-2 leading-relaxed">${escapeHtml(previewText)}</p>` : ''}
+          ${previewText && previewText !== displayTitle ? `<p class="text-xs text-slate-500 line-clamp-1 leading-normal">${escapeHtml(previewText)}</p>` : ''}
 
-          ${relationBadges.length > 0 ? `
-            <div class="flex flex-wrap gap-1.5 pt-1">
+          <div class="flex items-center justify-between pt-1">
+            <div class="flex flex-wrap gap-1">
               ${relationBadges.map(b => `
-                <span class="text-xs bg-slate-100 text-slate-600 px-2.5 py-1 rounded-lg font-medium inline-flex items-center gap-1 border border-slate-200/60">
-                  <span class="text-slate-400">${escapeHtml(b.key)}:</span>
-                  <span class="truncate max-w-[130px]">${escapeHtml(b.value)}</span>
+                <span class="text-[10px] bg-indigo-50 text-indigo-700 px-2 py-0.5 rounded-md font-medium inline-flex items-center gap-1 border border-indigo-100">
+                  <span class="text-indigo-400 font-normal">${escapeHtml(b.key)}:</span>
+                  <span class="truncate max-w-[120px]">${escapeHtml(b.value)}</span>
                 </span>
               `).join('')}
             </div>
-          ` : ''}
-
-          <div class="flex items-center justify-between pt-3 text-xs text-slate-400 border-t border-slate-100">
-            <span class="flex items-center gap-1.5"><i class="fa-regular fa-clock"></i>${updatedAt}</span>
-            <i class="fa-solid fa-chevron-right text-slate-300 text-xs"></i>
+            <span class="text-[10px] text-slate-400 flex items-center gap-1 ml-auto flex-shrink-0">
+              <i class="fa-regular fa-clock"></i>${updatedAt}
+            </span>
           </div>
         `;
 
@@ -421,7 +450,7 @@
       }
 
       const filtered = itemsData.filter(item => {
-        const title = (item.title || item.name || '').toLowerCase();
+        const title = getItemTitle(item).toLowerCase();
         const id = item.id.toLowerCase();
         return title.includes(q) || id.includes(q);
       });
@@ -430,7 +459,7 @@
     }
 
     // --- Dynamic Editor Form Generator ---
-    function openEditorModal(item = null) {
+    async function openEditorModal(item = null) {
       currentEditingItem = item;
       isCreating = !item;
 
@@ -444,55 +473,55 @@
       if (isCreating) {
         titleEl.textContent = '新規コンテンツ';
         badgeEl.textContent = '新規';
-        badgeEl.className = 'px-3 py-1 text-xs rounded-full font-bold bg-emerald-100 text-emerald-700';
+        badgeEl.className = 'px-2 py-0.5 text-[10px] rounded-full font-bold bg-emerald-100 text-emerald-700';
         deleteBtn.classList.add('hidden');
       } else {
-        titleEl.textContent = 'コンテンツ編集';
+        titleEl.textContent = getItemTitle(item);
         badgeEl.textContent = item.id;
-        badgeEl.className = 'px-3 py-1 text-xs rounded-full font-bold bg-indigo-100 text-indigo-700';
+        badgeEl.className = 'px-2 py-0.5 text-[10px] rounded-full font-bold bg-indigo-100 text-indigo-700';
         deleteBtn.classList.remove('hidden');
       }
 
       const sampleObj = item || (itemsData.length > 0 ? itemsData[0] : { title: '', content: '' });
       const ignoreKeys = ['createdAt', 'updatedAt', 'publishedAt', 'revisedAt'];
 
-      Object.keys(sampleObj).forEach(key => {
-        if (ignoreKeys.includes(key)) return;
+      for (const key of Object.keys(sampleObj)) {
+        if (ignoreKeys.includes(key)) continue;
 
         const val = item ? item[key] : '';
         const fieldGroup = document.createElement('div');
-        fieldGroup.className = 'space-y-2 bg-slate-50 p-4 rounded-2xl border border-slate-200/70';
+        fieldGroup.className = 'space-y-1.5 bg-slate-50 p-3 rounded-xl border border-slate-200/70';
 
         const label = document.createElement('label');
         label.className = 'block font-bold text-slate-700 text-xs tracking-wider uppercase flex items-center justify-between';
         label.innerHTML = `<span>${key}</span>`;
 
-        // 1. ID Field (Create mode only)
+        // 1. ID Field
         if (key === 'id') {
-          if (!isCreating) return;
+          if (!isCreating) continue;
           const input = document.createElement('input');
           input.type = 'text';
           input.name = key;
-          input.placeholder = 'カスタムID（指定しない場合は自動生成）';
-          input.className = 'w-full border border-slate-300 rounded-2xl px-4 py-3 bg-white focus:outline-none focus:ring-2 focus:ring-indigo-500';
+          input.placeholder = 'カスタムID（空欄で自動生成）';
+          input.className = 'w-full border border-slate-300 rounded-xl px-3 py-2 bg-white focus:outline-none focus:ring-2 focus:ring-indigo-500 text-sm';
           fieldGroup.appendChild(label);
           fieldGroup.appendChild(input);
           fieldsContainer.appendChild(fieldGroup);
-          return;
+          continue;
         }
 
         // 2. Boolean Field
         if (typeof val === 'boolean') {
           const checkWrap = document.createElement('div');
-          checkWrap.className = 'flex items-center space-x-3 pt-1';
+          checkWrap.className = 'flex items-center space-x-2 pt-0.5';
           const input = document.createElement('input');
           input.type = 'checkbox';
           input.name = key;
           input.checked = !!val;
-          input.className = 'w-6 h-6 text-indigo-600 rounded-lg border-slate-300 focus:ring-indigo-500';
+          input.className = 'w-5 h-5 text-indigo-600 rounded border-slate-300 focus:ring-indigo-500';
           checkWrap.appendChild(input);
           checkWrap.appendChild(document.createElement('span')).textContent = '有効 (True)';
-          checkWrap.lastChild.className = 'text-sm text-slate-700 font-medium';
+          checkWrap.lastChild.className = 'text-xs text-slate-700 font-medium';
           fieldGroup.appendChild(label);
           fieldGroup.appendChild(checkWrap);
         } 
@@ -504,7 +533,7 @@
           input.name = `${key}.url`;
           input.value = val.url || '';
           input.placeholder = 'https://images.microcms-assets.io/...';
-          input.className = 'w-full border border-slate-300 rounded-2xl px-4 py-3 bg-white focus:outline-none focus:ring-2 focus:ring-indigo-500';
+          input.className = 'w-full border border-slate-300 rounded-xl px-3 py-2 bg-white focus:outline-none focus:ring-2 focus:ring-indigo-500 text-sm';
           
           fieldGroup.appendChild(label);
           fieldGroup.appendChild(input);
@@ -512,56 +541,68 @@
           if (val.url) {
             const imgPrev = document.createElement('img');
             imgPrev.src = val.url;
-            imgPrev.className = 'h-28 w-auto rounded-2xl object-cover mt-2 border border-slate-200 shadow-sm';
+            imgPrev.className = 'h-20 w-auto rounded-xl object-cover mt-1.5 border border-slate-200 shadow-sm';
             fieldGroup.appendChild(imgPrev);
           }
         }
-        // 4. Content Reference / Relation Field (Category / Tag / Custom Reference)
+        // 4. Content Reference / Category Field (プルダウン選択化)
         else if (typeof val === 'object' && val !== null) {
-          const isArr = Array.isArray(val);
-          label.innerHTML += `<span class="text-[10px] text-indigo-600 font-normal">${isArr ? '参照項目 (複数)' : '参照項目 (単一)'}</span>`;
+          label.innerHTML += `<span class="text-[10px] text-indigo-600 font-normal">選択（参照）</span>`;
 
-          // IDの抽出
-          let extractedId = '';
-          if (isArr) {
-            extractedId = val.map(v => (typeof v === 'object' ? v.id : v)).join(', ');
-          } else {
-            extractedId = val.id || (typeof val === 'string' ? val : '');
+          // 関連選択肢の取得
+          await fetchReferenceCandidates(key);
+          const candidates = referenceCandidates[key] || [];
+
+          const currentSelectedId = val ? (val.id || (typeof val === 'string' ? val : '')) : '';
+
+          const select = document.createElement('select');
+          select.name = key;
+          select.dataset.isRelation = "true";
+          select.className = 'w-full border border-slate-300 rounded-xl px-3 py-2 bg-white focus:outline-none focus:ring-2 focus:ring-indigo-500 text-sm font-medium';
+
+          // 未選択オプション
+          const defaultOpt = document.createElement('option');
+          defaultOpt.value = '';
+          defaultOpt.textContent = '-- 選択してください --';
+          select.appendChild(defaultOpt);
+
+          // 候補オプション追加
+          candidates.forEach(cand => {
+            const opt = document.createElement('option');
+            opt.value = cand.id;
+            const name = cand.name || cand.title || cand.id;
+            opt.textContent = `${name} (${cand.id})`;
+            if (cand.id === currentSelectedId) opt.selected = true;
+            select.appendChild(opt);
+          });
+
+          // 候補に現在のIDが無い場合のフォールバック（手動入力済みのID保持）
+          if (currentSelectedId && !candidates.some(c => c.id === currentSelectedId)) {
+            const currentOpt = document.createElement('option');
+            currentOpt.value = currentSelectedId;
+            currentOpt.textContent = `${formatRelationValue(val)} (${currentSelectedId})`;
+            currentOpt.selected = true;
+            select.appendChild(currentOpt);
           }
 
-          const input = document.createElement('input');
-          input.type = 'text';
-          input.name = key;
-          input.dataset.isRelation = "true";
-          input.dataset.isArr = isArr ? "true" : "false";
-          input.value = extractedId;
-          input.placeholder = isArr ? '参照ID（カンマ区切り例: id1, id2）' : '参照ID（例: scdgmuz5nrl1）';
-          input.className = 'w-full border border-slate-300 rounded-2xl px-4 py-3 bg-white focus:outline-none focus:ring-2 focus:ring-indigo-500 font-mono';
-
-          const formattedLabel = formatRelationValue(val);
-          const badgeNotice = document.createElement('div');
-          badgeNotice.className = 'text-xs text-slate-600 bg-white px-3.5 py-2.5 rounded-xl border border-slate-200 flex items-start gap-2';
-          badgeNotice.innerHTML = `<i class="fa-solid fa-link text-indigo-500 mt-0.5"></i> <span><strong class="font-semibold text-slate-700">参照名:</strong> ${escapeHtml(formattedLabel)}</span>`;
-
           fieldGroup.appendChild(label);
-          fieldGroup.appendChild(badgeNotice);
-          fieldGroup.appendChild(input);
+          fieldGroup.appendChild(select);
         }
-        // 5. Rich Text / HTML / Content Body Field (HTML Switcher)
+        // 5. Rich Text / Content Body
         else if (key.toLowerCase().includes('content') || key.toLowerCase().includes('body') || (typeof val === 'string' && (val.includes('<') || val.length > 50))) {
-          label.innerHTML += `<span class="text-[10px] text-indigo-600 font-normal">リッチテキスト / HTML</span>`;
+          label.innerHTML += `<span class="text-[10px] text-indigo-600 font-normal">HTML / 本文</span>`;
           
           const tabContainer = document.createElement('div');
-          tabContainer.className = 'flex border-b border-slate-200 space-x-4 mb-2';
+          tabContainer.className = 'flex border-b border-slate-200 space-x-3 mb-1.5';
 
           const btnCode = document.createElement('button');
           btnCode.type = 'button';
-          btnCode.className = 'pb-2 border-b-2 border-indigo-600 text-indigo-600 font-bold text-xs flex items-center gap-1.5';
-          btnCode.innerHTML = `<i class="fa-solid fa-code"></i> HTMLコード`;
+          btnCode.className = 'pb-1 border-b-2 border-indigo-600 text-indigo-600 font-bold text-xs flex items-center gap-1';
+          btnCode.innerHTML = `<i class="fa-solid fa-code"></i> コード`;
 
           const btnPrev = document.createElement('button');
           btnPrev.type = 'button';
-          btnPrev.className = 'pb-2 border-b-2 border-transparent text-slate-400 font-medium text-xs flex items-center gap-1.5 hover:text-slate-600';
+          btnPrev.className = 'pb-1 border-b-2 border-transparent text-slate-400 font-medium text-xs flex items-center gap-1 hover:text-slate-600';
           btnPrev.innerHTML = `<i class="fa-solid fa-eye"></i> プレビュー`;
 
           tabContainer.appendChild(btnCode);
@@ -569,25 +610,25 @@
 
           const textarea = document.createElement('textarea');
           textarea.name = key;
-          textarea.rows = 8;
+          textarea.rows = 6;
           textarea.value = val || '';
-          textarea.placeholder = `${key}（HTML / テキスト）を入力`;
-          textarea.className = 'w-full border border-slate-300 rounded-2xl p-4 bg-white focus:outline-none focus:ring-2 focus:ring-indigo-500 font-mono leading-relaxed';
+          textarea.placeholder = `${key} を入力`;
+          textarea.className = 'w-full border border-slate-300 rounded-xl p-3 bg-white focus:outline-none focus:ring-2 focus:ring-indigo-500 font-mono text-sm leading-relaxed';
 
           const previewDiv = document.createElement('div');
-          previewDiv.className = 'w-full min-h-[200px] max-h-[350px] overflow-y-auto border border-slate-200 rounded-2xl p-4 bg-white hidden html-preview-content';
+          previewDiv.className = 'w-full min-h-[160px] max-h-[300px] overflow-y-auto border border-slate-200 rounded-xl p-3 bg-white hidden html-preview-content';
           previewDiv.innerHTML = val || '<span class="text-slate-400 italic">（内容がありません）</span>';
 
           btnCode.onclick = () => {
-            btnCode.className = 'pb-2 border-b-2 border-indigo-600 text-indigo-600 font-bold text-xs flex items-center gap-1.5';
-            btnPrev.className = 'pb-2 border-b-2 border-transparent text-slate-400 font-medium text-xs flex items-center gap-1.5 hover:text-slate-600';
+            btnCode.className = 'pb-1 border-b-2 border-indigo-600 text-indigo-600 font-bold text-xs flex items-center gap-1';
+            btnPrev.className = 'pb-1 border-b-2 border-transparent text-slate-400 font-medium text-xs flex items-center gap-1 hover:text-slate-600';
             textarea.classList.remove('hidden');
             previewDiv.classList.add('hidden');
           };
 
           btnPrev.onclick = () => {
-            btnPrev.className = 'pb-2 border-b-2 border-indigo-600 text-indigo-600 font-bold text-xs flex items-center gap-1.5';
-            btnCode.className = 'pb-2 border-b-2 border-transparent text-slate-400 font-medium text-xs flex items-center gap-1.5 hover:text-slate-600';
+            btnPrev.className = 'pb-1 border-b-2 border-indigo-600 text-indigo-600 font-bold text-xs flex items-center gap-1';
+            btnCode.className = 'pb-1 border-b-2 border-transparent text-slate-400 font-medium text-xs flex items-center gap-1 hover:text-slate-600';
             previewDiv.innerHTML = textarea.value.trim() || '<span class="text-slate-400 italic">（内容がありません）</span>';
             textarea.classList.add('hidden');
             previewDiv.classList.remove('hidden');
@@ -598,20 +639,20 @@
           fieldGroup.appendChild(textarea);
           fieldGroup.appendChild(previewDiv);
         }
-        // 6. Normal Text / Number Field
+        // 6. Normal Text Field
         else {
           const input = document.createElement('input');
           input.type = typeof val === 'number' ? 'number' : 'text';
           input.name = key;
           input.value = val !== undefined && val !== null ? val : '';
           input.placeholder = key;
-          input.className = 'w-full border border-slate-300 rounded-2xl px-4 py-3 bg-white focus:outline-none focus:ring-2 focus:ring-indigo-500';
+          input.className = 'w-full border border-slate-300 rounded-xl px-3 py-2 bg-white focus:outline-none focus:ring-2 focus:ring-indigo-500 text-sm';
           fieldGroup.appendChild(label);
           fieldGroup.appendChild(input);
         }
 
         fieldsContainer.appendChild(fieldGroup);
-      });
+      }
 
       modalEditor.classList.remove('hidden');
     }
@@ -623,7 +664,7 @@
     // --- CRUD Actions ---
     async function saveContent(isDraft = false) {
       const fieldsContainer = document.getElementById('editor-fields');
-      const inputs = fieldsContainer.querySelectorAll('input, textarea');
+      const inputs = fieldsContainer.querySelectorAll('input, textarea, select');
       const payload = {};
       let customId = null;
 
@@ -636,18 +677,10 @@
             return;
           }
 
-          // 関連参照フィールド (Category/Tag 等) のパース・整形
+          // 関連参照フィールド (プルダウン選択時)
           if (el.dataset.isRelation === "true") {
             const rawVal = el.value.trim();
-            const isArr = el.dataset.isArr === "true";
-
-            if (!rawVal) {
-              payload[el.name] = isArr ? [] : null;
-            } else if (isArr) {
-              payload[el.name] = rawVal.split(',').map(s => s.trim()).filter(Boolean);
-            } else {
-              payload[el.name] = rawVal; // 単一参照はID文字列そのものを指定
-            }
+            payload[el.name] = rawVal ? rawVal : null;
             return;
           }
 
@@ -669,7 +702,7 @@
         return;
       }
 
-      showToast(isDraft ? '下書きを保存中...' : '保存中...', 'fa-spinner fa-spin');
+      showToast(isDraft ? '下書き保存中...' : '保存中...', 'fa-spinner fa-spin');
 
       try {
         let url = `https://${config.domain}.microcms.io/api/v1/${config.endpoint}`;
@@ -701,7 +734,7 @@
           throw new Error(errData.message || `HTTPエラー ${res.status}`);
         }
 
-        showToast(isDraft ? '下書きを保存しました' : '公開・保存が完了しました', 'fa-check text-emerald-400');
+        showToast(isDraft ? '下書き保存しました' : '公開・保存しました', 'fa-check text-emerald-400');
         closeEditorModal();
         fetchContents();
       } catch (err) {
@@ -730,7 +763,7 @@
 
         if (!res.ok) throw new Error(`削除に失敗しました (${res.status})`);
 
-        showToast('削除が完了しました', 'fa-check text-emerald-400');
+        showToast('削除完了しました', 'fa-check text-emerald-400');
         closeEditorModal();
         fetchContents();
       } catch (err) {
@@ -744,6 +777,7 @@
       document.getElementById('cfg-domain').value = config.domain;
       document.getElementById('cfg-apikey').value = config.apiKey;
       document.getElementById('cfg-endpoint').value = config.endpoint;
+      document.getElementById('cfg-ref-endpoint').value = config.refEndpoint || '';
       modalSettings.classList.remove('hidden');
     }
 
@@ -755,15 +789,17 @@
       const d = document.getElementById('cfg-domain').value.trim();
       const a = document.getElementById('cfg-apikey').value.trim();
       const e = document.getElementById('cfg-endpoint').value.trim();
+      const r = document.getElementById('cfg-ref-endpoint').value.trim();
 
       if (!d || !a || !e) {
-        showToast('全ての項目を入力してください', 'fa-triangle-exclamation text-amber-400');
+        showToast('必須項目を入力してください', 'fa-triangle-exclamation text-amber-400');
         return;
       }
 
       config.domain = d;
       config.apiKey = a;
       config.endpoint = e;
+      config.refEndpoint = r;
 
       await saveStoredConfig(config);
 
@@ -786,7 +822,7 @@
       setTimeout(() => {
         toast.classList.remove('opacity-100');
         toast.classList.add('opacity-0');
-      }, 3500);
+      }, 3200);
     }
 
     function escapeHtml(str) {
