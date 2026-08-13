@@ -125,9 +125,15 @@
         </div>
 
         <div class="space-y-1">
+          <label class="block font-medium text-slate-700 text-xs">タイトル表示用キー (任意)</label>
+          <input type="text" id="cfg-title-field" placeholder="例: question, title, name (空欄で自動判定)" class="w-full border border-slate-300 rounded-xl px-3 py-2 focus:outline-none focus:ring-2 focus:ring-indigo-500">
+          <p class="text-[10px] text-slate-400">一覧のタイトルとして優先表示するフィールド名。</p>
+        </div>
+
+        <div class="space-y-1">
           <label class="block font-medium text-slate-700 text-xs">参照先カテゴリ/タグ エンドポイント (任意)</label>
           <input type="text" id="cfg-ref-endpoint" placeholder="categories (省略時も自動検知)" class="w-full border border-slate-300 rounded-xl px-3 py-2 focus:outline-none focus:ring-2 focus:ring-indigo-500">
-          <p class="text-[10px] text-slate-400">プルダウンの選択肢取得に使用します。</p>
+          <p class="text-[10px] text-slate-400">カテゴリ等のプルダウン選択肢を取得します。</p>
         </div>
       </div>
 
@@ -147,7 +153,7 @@
       <div class="flex items-center justify-between border-b pb-3 flex-shrink-0">
         <div class="flex items-center space-x-2">
           <span id="editor-title" class="font-bold text-slate-800 text-base">記事の編集</span>
-          <span id="editor-status-badge" class="px-2 py-0.5 text-[11px] rounded-full font-semibold bg-slate-100 text-slate-600">NEW</span>
+          <span id="editor-status-badge" class="px-2 py-0.5 text-[10px] rounded-full font-bold bg-slate-100 text-slate-600">NEW</span>
         </div>
         <button onclick="closeEditorModal()" class="text-slate-400 hover:text-slate-600 p-1 -mr-1">
           <i class="fa-solid fa-xmark text-lg"></i>
@@ -230,6 +236,7 @@
         domain: localStorage.getItem('mc_domain') || '',
         apiKey: localStorage.getItem('mc_apikey') || '',
         endpoint: localStorage.getItem('mc_endpoint') || '',
+        titleField: localStorage.getItem('mc_title_field') || '',
         refEndpoint: localStorage.getItem('mc_ref_endpoint') || ''
       };
     }
@@ -238,6 +245,7 @@
       localStorage.setItem('mc_domain', cfg.domain);
       localStorage.setItem('mc_apikey', cfg.apiKey);
       localStorage.setItem('mc_endpoint', cfg.endpoint);
+      localStorage.setItem('mc_title_field', cfg.titleField || '');
       localStorage.setItem('mc_ref_endpoint', cfg.refEndpoint || '');
 
       try {
@@ -251,9 +259,9 @@
     }
 
     // --- State Management ---
-    let config = { domain: '', apiKey: '', endpoint: '', refEndpoint: '' };
+    let config = { domain: '', apiKey: '', endpoint: '', titleField: '', refEndpoint: '' };
     let itemsData = [];
-    let referenceCandidates = {}; // キーごとの参照選択肢を保持
+    let referenceCandidates = {};
     let currentEditingItem = null;
     let isCreating = false;
 
@@ -298,7 +306,6 @@
         const data = await res.json();
         itemsData = data.contents || [];
 
-        // 参照先候補データのバックグラウンド取得（設定されていれば）
         fetchReferenceCandidates();
 
         setupBanner.classList.add('hidden');
@@ -314,7 +321,7 @@
 
     // 参照項目のプルダウン用選択肢を取得する
     async function fetchReferenceCandidates(fieldName = 'category') {
-      const endpointToFetch = config.refEndpoint || `${fieldName}s`; // 例: category -> categories
+      const endpointToFetch = config.refEndpoint || `${fieldName}s`;
       if (referenceCandidates[fieldName]) return;
 
       try {
@@ -332,19 +339,29 @@
       }
     }
 
-    // 人間に読みやすいタイトルを抽出するヘルパー
+    // 人間に読みやすいタイトルを抽出するヘルパー（設定されたフィールドを最優先）
     function getItemTitle(item) {
       if (!item) return '無題';
+
+      // 1. 設定画面でユーザーが指定したフィールドを最優先
+      if (config.titleField && item[config.titleField]) {
+        const customVal = item[config.titleField];
+        if (typeof customVal === 'string' && customVal.trim()) {
+          return customVal.replace(/<[^>]*>?/gm, '').trim();
+        }
+      }
+
+      // 2. 自動判定のフォールバック一覧
       if (item.title) return item.title;
       if (item.name) return item.name;
       if (item.question) return item.question;
       if (item.subject) return item.subject;
 
-      // HTML/テキスト本文の頭から抽出
+      // 3. 本文の先頭から抽出
       let text = item.content || item.body || item.description || '';
       if (typeof text === 'string' && text.length > 0) {
         const clean = text.replace(/<[^>]*>?/gm, '').trim();
-        if (clean.length > 0) return clean.substring(0, 30);
+        if (clean.length > 0) return clean.substring(0, 35);
       }
 
       return item.id || '無題';
@@ -545,11 +562,10 @@
             fieldGroup.appendChild(imgPrev);
           }
         }
-        // 4. Content Reference / Category Field (プルダウン選択化)
+        // 4. Content Reference / Category Field (プルダウン選択)
         else if (typeof val === 'object' && val !== null) {
           label.innerHTML += `<span class="text-[10px] text-indigo-600 font-normal">選択（参照）</span>`;
 
-          // 関連選択肢の取得
           await fetchReferenceCandidates(key);
           const candidates = referenceCandidates[key] || [];
 
@@ -560,13 +576,11 @@
           select.dataset.isRelation = "true";
           select.className = 'w-full border border-slate-300 rounded-xl px-3 py-2 bg-white focus:outline-none focus:ring-2 focus:ring-indigo-500 text-sm font-medium';
 
-          // 未選択オプション
           const defaultOpt = document.createElement('option');
           defaultOpt.value = '';
           defaultOpt.textContent = '-- 選択してください --';
           select.appendChild(defaultOpt);
 
-          // 候補オプション追加
           candidates.forEach(cand => {
             const opt = document.createElement('option');
             opt.value = cand.id;
@@ -576,7 +590,6 @@
             select.appendChild(opt);
           });
 
-          // 候補に現在のIDが無い場合のフォールバック（手動入力済みのID保持）
           if (currentSelectedId && !candidates.some(c => c.id === currentSelectedId)) {
             const currentOpt = document.createElement('option');
             currentOpt.value = currentSelectedId;
@@ -677,14 +690,12 @@
             return;
           }
 
-          // 関連参照フィールド (プルダウン選択時)
           if (el.dataset.isRelation === "true") {
             const rawVal = el.value.trim();
             payload[el.name] = rawVal ? rawVal : null;
             return;
           }
 
-          // ネストオブジェクト (例: image.url)
           if (el.name.includes('.')) {
             const [parent, child] = el.name.split('.');
             payload[parent] = payload[parent] || {};
@@ -777,6 +788,7 @@
       document.getElementById('cfg-domain').value = config.domain;
       document.getElementById('cfg-apikey').value = config.apiKey;
       document.getElementById('cfg-endpoint').value = config.endpoint;
+      document.getElementById('cfg-title-field').value = config.titleField || '';
       document.getElementById('cfg-ref-endpoint').value = config.refEndpoint || '';
       modalSettings.classList.remove('hidden');
     }
@@ -789,6 +801,7 @@
       const d = document.getElementById('cfg-domain').value.trim();
       const a = document.getElementById('cfg-apikey').value.trim();
       const e = document.getElementById('cfg-endpoint').value.trim();
+      const t = document.getElementById('cfg-title-field').value.trim();
       const r = document.getElementById('cfg-ref-endpoint').value.trim();
 
       if (!d || !a || !e) {
@@ -799,6 +812,7 @@
       config.domain = d;
       config.apiKey = a;
       config.endpoint = e;
+      config.titleField = t;
       config.refEndpoint = r;
 
       await saveStoredConfig(config);
