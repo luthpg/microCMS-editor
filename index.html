@@ -210,12 +210,7 @@
             if (req.result) {
               resolve(req.result);
             } else {
-              // IndexedDBになければ localStorage からフォールバック読み込み
-              resolve({
-                domain: localStorage.getItem('mc_domain') || '',
-                apiKey: localStorage.getItem('mc_apikey') || '',
-                endpoint: localStorage.getItem('mc_endpoint') || ''
-              });
+              resolve(getLocalStorageConfig());
             }
           };
           req.onerror = () => resolve(getLocalStorageConfig());
@@ -234,12 +229,10 @@
     }
 
     async function saveStoredConfig(cfg) {
-      // LocalStorage 保存
       localStorage.setItem('mc_domain', cfg.domain);
       localStorage.setItem('mc_apikey', cfg.apiKey);
       localStorage.setItem('mc_endpoint', cfg.endpoint);
 
-      // IndexedDB 保存
       try {
         const db = await initDB();
         const tx = db.transaction(STORE_NAME, 'readwrite');
@@ -319,13 +312,31 @@
 
       if (typeof val === 'object') {
         if (val.url) return `[画像]`;
-        if (val.title) return val.title;
         if (val.name) return val.name;
-        if (val.id) return `#${val.id}`;
+        if (val.title) return val.title;
+        if (val.id) return val.id;
         return JSON.stringify(val);
       }
 
       return String(val);
+    }
+
+    // オブジェクトからID文字列またはID配列を抽出（microCMS保存用）
+    function cleanRelationData(data) {
+      if (!data) return null;
+
+      if (Array.isArray(data)) {
+        return data.map(item => cleanRelationData(item)).filter(Boolean);
+      }
+
+      if (typeof data === 'object') {
+        if (data.id) return data.id; // 単一参照はID文字列を返す
+        return null;
+      }
+
+      if (typeof data === 'string') return data.trim();
+
+      return data;
     }
 
     // --- UI Rendering ---
@@ -505,32 +516,41 @@
             fieldGroup.appendChild(imgPrev);
           }
         }
-        // 4. Object / Relation Array Field (JSON Editor)
+        // 4. Content Reference / Relation Field (Category / Tag / Custom Reference)
         else if (typeof val === 'object' && val !== null) {
           const isArr = Array.isArray(val);
-          label.innerHTML += `<span class="text-[10px] text-indigo-600 font-normal">${isArr ? '参照リスト (JSON)' : '参照項目 (JSON)'}</span>`;
+          label.innerHTML += `<span class="text-[10px] text-indigo-600 font-normal">${isArr ? '参照項目 (複数)' : '参照項目 (単一)'}</span>`;
 
-          const textarea = document.createElement('textarea');
-          textarea.name = key;
-          textarea.dataset.isJson = "true";
-          textarea.rows = isArr ? 4 : 3;
-          textarea.value = JSON.stringify(val, null, 2);
-          textarea.className = 'w-full border border-slate-300 rounded-2xl p-3.5 bg-white focus:outline-none focus:ring-2 focus:ring-indigo-500 font-mono leading-relaxed';
+          // IDの抽出
+          let extractedId = '';
+          if (isArr) {
+            extractedId = val.map(v => (typeof v === 'object' ? v.id : v)).join(', ');
+          } else {
+            extractedId = val.id || (typeof val === 'string' ? val : '');
+          }
 
-          const formatted = formatRelationValue(val);
+          const input = document.createElement('input');
+          input.type = 'text';
+          input.name = key;
+          input.dataset.isRelation = "true";
+          input.dataset.isArr = isArr ? "true" : "false";
+          input.value = extractedId;
+          input.placeholder = isArr ? '参照ID（カンマ区切り例: id1, id2）' : '参照ID（例: scdgmuz5nrl1）';
+          input.className = 'w-full border border-slate-300 rounded-2xl px-4 py-3 bg-white focus:outline-none focus:ring-2 focus:ring-indigo-500 font-mono';
+
+          const formattedLabel = formatRelationValue(val);
           const badgeNotice = document.createElement('div');
           badgeNotice.className = 'text-xs text-slate-600 bg-white px-3.5 py-2.5 rounded-xl border border-slate-200 flex items-start gap-2';
-          badgeNotice.innerHTML = `<i class="fa-solid fa-link text-indigo-500 mt-0.5"></i> <span><strong class="font-semibold text-slate-700">現在の設定:</strong> ${escapeHtml(formatted)}</span>`;
+          badgeNotice.innerHTML = `<i class="fa-solid fa-link text-indigo-500 mt-0.5"></i> <span><strong class="font-semibold text-slate-700">参照名:</strong> ${escapeHtml(formattedLabel)}</span>`;
 
           fieldGroup.appendChild(label);
           fieldGroup.appendChild(badgeNotice);
-          fieldGroup.appendChild(textarea);
+          fieldGroup.appendChild(input);
         }
         // 5. Rich Text / HTML / Content Body Field (HTML Switcher)
         else if (key.toLowerCase().includes('content') || key.toLowerCase().includes('body') || (typeof val === 'string' && (val.includes('<') || val.length > 50))) {
           label.innerHTML += `<span class="text-[10px] text-indigo-600 font-normal">リッチテキスト / HTML</span>`;
           
-          // Code / Preview Tab Buttons
           const tabContainer = document.createElement('div');
           tabContainer.className = 'flex border-b border-slate-200 space-x-4 mb-2';
 
@@ -547,7 +567,6 @@
           tabContainer.appendChild(btnCode);
           tabContainer.appendChild(btnPrev);
 
-          // Input Textarea
           const textarea = document.createElement('textarea');
           textarea.name = key;
           textarea.rows = 8;
@@ -555,12 +574,10 @@
           textarea.placeholder = `${key}（HTML / テキスト）を入力`;
           textarea.className = 'w-full border border-slate-300 rounded-2xl p-4 bg-white focus:outline-none focus:ring-2 focus:ring-indigo-500 font-mono leading-relaxed';
 
-          // Preview Div
           const previewDiv = document.createElement('div');
           previewDiv.className = 'w-full min-h-[200px] max-h-[350px] overflow-y-auto border border-slate-200 rounded-2xl p-4 bg-white hidden html-preview-content';
           previewDiv.innerHTML = val || '<span class="text-slate-400 italic">（内容がありません）</span>';
 
-          // Tab Switch Logic
           btnCode.onclick = () => {
             btnCode.className = 'pb-2 border-b-2 border-indigo-600 text-indigo-600 font-bold text-xs flex items-center gap-1.5';
             btnPrev.className = 'pb-2 border-b-2 border-transparent text-slate-400 font-medium text-xs flex items-center gap-1.5 hover:text-slate-600';
@@ -619,15 +636,22 @@
             return;
           }
 
-          if (el.dataset.isJson === "true") {
-            try {
-              payload[el.name] = el.value.trim() ? JSON.parse(el.value) : null;
-            } catch (e) {
-              throw new Error(`[${el.name}] のJSON形式が不正です`);
+          // 関連参照フィールド (Category/Tag 等) のパース・整形
+          if (el.dataset.isRelation === "true") {
+            const rawVal = el.value.trim();
+            const isArr = el.dataset.isArr === "true";
+
+            if (!rawVal) {
+              payload[el.name] = isArr ? [] : null;
+            } else if (isArr) {
+              payload[el.name] = rawVal.split(',').map(s => s.trim()).filter(Boolean);
+            } else {
+              payload[el.name] = rawVal; // 単一参照はID文字列そのものを指定
             }
             return;
           }
 
+          // ネストオブジェクト (例: image.url)
           if (el.name.includes('.')) {
             const [parent, child] = el.name.split('.');
             payload[parent] = payload[parent] || {};
@@ -762,7 +786,7 @@
       setTimeout(() => {
         toast.classList.remove('opacity-100');
         toast.classList.add('opacity-0');
-      }, 3200);
+      }, 3500);
     }
 
     function escapeHtml(str) {
