@@ -46,10 +46,13 @@
   <header class="bg-indigo-600 text-white px-4 py-3 flex items-center justify-between shadow-md z-10 flex-shrink-0">
     <div class="flex items-center space-x-2.5">
       <i class="fa-solid fa-cube text-lg"></i>
-      <h1 class="font-bold text-base tracking-wide" id="app-header-title">microCMS Editor</h1>
+      <div class="leading-tight">
+        <h1 class="font-bold text-sm tracking-wide" id="header-api-title">microCMS Editor</h1>
+        <span class="text-[10px] text-indigo-200" id="header-api-badge">未接続</span>
+      </div>
     </div>
     <div class="flex items-center gap-1.5">
-      <button id="btn-refresh" onclick="fetchContents()" class="p-2 rounded-full hover:bg-indigo-700 transition active:scale-95 text-indigo-100">
+      <button onclick="initLoad()" class="p-2 rounded-full hover:bg-indigo-700 transition active:scale-95 text-indigo-100">
         <i class="fa-solid fa-rotate-right text-base"></i>
       </button>
       <button id="btn-settings" class="p-2 rounded-full hover:bg-indigo-700 transition active:scale-95 text-indigo-100">
@@ -60,48 +63,40 @@
 
   <!-- Main View -->
   <main class="flex-1 overflow-y-auto px-3.5 py-3 space-y-3 no-scrollbar" id="main-content">
-    <!-- Unconfigured Setup Banner -->
     <div id="setup-banner" class="bg-white rounded-2xl p-5 shadow-sm border border-indigo-100 text-center space-y-3 my-auto max-w-md mx-auto">
       <div class="w-12 h-12 bg-indigo-50 rounded-xl flex items-center justify-center mx-auto text-indigo-600">
         <i class="fa-solid fa-sliders text-xl"></i>
       </div>
       <div class="space-y-1">
         <h2 class="font-bold text-slate-800 text-base">API接続設定が必要です</h2>
-        <p class="text-xs text-slate-500 leading-relaxed">右上の設定ボタンから サービスDomain、API Key、エンドポイント名、API形式を入力してください。</p>
+        <p class="text-xs text-slate-500 leading-relaxed">右上の設定ボタンから サービスDomain、API Key、エンドポイント名を入力してください。<br><span class="text-indigo-600 font-bold">※マネジメントAPI権限を持つキーを使用するとスキーマを自動取得できます。</span></p>
       </div>
       <button onclick="openSettingsModal()" class="w-full bg-indigo-600 hover:bg-indigo-700 text-white font-bold py-2.5 rounded-xl text-sm shadow-md active:scale-98 transition">
         設定を開く
       </button>
     </div>
 
-    <!-- Content Container -->
+    <!-- Content Area -->
     <div id="content-container" class="hidden space-y-3 max-w-2xl mx-auto">
-      
-      <!-- List API Header Controller (リスト形式の場合のみ表示) -->
-      <div id="list-controls" class="space-y-2">
+      <!-- List Controls -->
+      <div id="list-controls" class="space-y-2 hidden">
         <div class="flex items-center justify-between gap-2.5">
           <div class="relative flex-1">
             <i class="fa-solid fa-magnifying-glass absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-400 text-xs"></i>
-            <input type="text" id="search-input" placeholder="タイトルやIDで検索..." class="w-full pl-9 pr-3 py-2 bg-white rounded-xl border border-slate-200 focus:outline-none focus:ring-2 focus:ring-indigo-500 shadow-sm text-sm">
+            <input type="text" id="search-input" placeholder="検索..." class="w-full pl-9 pr-3 py-2 bg-white rounded-xl border border-slate-200 focus:outline-none focus:ring-2 focus:ring-indigo-500 shadow-sm text-sm">
           </div>
           <button id="btn-create" class="bg-indigo-600 hover:bg-indigo-700 text-white px-4 py-2 rounded-xl font-bold flex items-center gap-1.5 shadow-md active:scale-95 transition whitespace-nowrap text-sm">
             <i class="fa-solid fa-plus text-xs"></i>
-            <span>新規</span>
+            <span>新規追加</span>
           </button>
-        </div>
-        <!-- Status Filter Buttons -->
-        <div class="flex gap-1.5 text-xs overflow-x-auto no-scrollbar py-0.5" id="status-filters">
-          <button onclick="setStatusFilter('ALL')" class="status-tab-btn px-3 py-1 rounded-lg font-medium bg-indigo-600 text-white shadow-sm" data-status="ALL">すべて</button>
-          <button onclick="setStatusFilter('PUBLISHED')" class="status-tab-btn px-3 py-1 rounded-lg font-medium bg-white text-slate-600 border border-slate-200" data-status="PUBLISHED">公開中</button>
-          <button onclick="setStatusFilter('DRAFT')" class="status-tab-btn px-3 py-1 rounded-lg font-medium bg-white text-slate-600 border border-slate-200" data-status="DRAFT">下書き</button>
         </div>
       </div>
 
-      <!-- Object API Header Card (オブジェクト形式の場合に表示) -->
+      <!-- Object API Header Notice -->
       <div id="object-controls" class="hidden bg-white p-4 rounded-2xl border border-indigo-100 shadow-sm flex items-center justify-between">
         <div>
-          <span class="text-[10px] font-bold uppercase tracking-wider text-indigo-600 bg-indigo-50 px-2 py-0.5 rounded-md">単一オブジェクト形式</span>
-          <h2 class="font-bold text-slate-800 text-sm mt-1" id="object-endpoint-title">設定項目</h2>
+          <span class="text-[10px] font-bold uppercase tracking-wider text-purple-600 bg-purple-50 px-2 py-0.5 rounded-md">オブジェクト形式 (単一)</span>
+          <h2 class="font-bold text-slate-800 text-sm mt-1" id="object-title-display">単一コンテンツ</h2>
         </div>
         <button onclick="openEditorModal(singleObjectData)" class="bg-indigo-600 hover:bg-indigo-700 text-white px-4 py-2 rounded-xl font-bold flex items-center gap-1.5 text-xs shadow-md active:scale-95 transition">
           <i class="fa-solid fa-pen-to-square"></i>
@@ -134,32 +129,20 @@
         <div class="space-y-1">
           <label class="block font-medium text-slate-700 text-xs">API Key</label>
           <input type="password" id="cfg-apikey" placeholder="X-MICROCMS-API-KEY" class="w-full border border-slate-300 rounded-xl px-3 py-2 focus:outline-none focus:ring-2 focus:ring-indigo-500">
-        </div>
-        <div class="grid grid-cols-2 gap-2">
-          <div class="space-y-1">
-            <label class="block font-medium text-slate-700 text-xs">メイン エンドポイント</label>
-            <input type="text" id="cfg-endpoint" placeholder="blogs や config など" class="w-full border border-slate-300 rounded-xl px-3 py-2 focus:outline-none focus:ring-2 focus:ring-indigo-500">
-          </div>
-          <div class="space-y-1">
-            <label class="block font-medium text-slate-700 text-xs">API 形式</label>
-            <select id="cfg-apitype" class="w-full border border-slate-300 rounded-xl px-3 py-2 bg-white focus:outline-none focus:ring-2 focus:ring-indigo-500">
-              <option value="list">リスト形式 (配列)</option>
-              <option value="object">オブジェクト形式 (単一)</option>
-            </select>
-          </div>
+          <p class="text-[10px] text-slate-400">※マネジメントAPI権限を付与したキーを使用するとスキーマが完全同期されます。</p>
         </div>
         <div class="space-y-1">
-          <label class="block font-medium text-slate-700 text-xs">タイトル表示用キー (任意)</label>
-          <input type="text" id="cfg-title-field" placeholder="title, name, question など" class="w-full border border-slate-300 rounded-xl px-3 py-2 focus:outline-none focus:ring-2 focus:ring-indigo-500">
+          <label class="block font-medium text-slate-700 text-xs">エンドポイント名 (API ID)</label>
+          <input type="text" id="cfg-endpoint" placeholder="例: banners, products, config" class="w-full border border-slate-300 rounded-xl px-3 py-2 focus:outline-none focus:ring-2 focus:ring-indigo-500">
         </div>
         <div class="space-y-1">
-          <label class="block font-medium text-slate-700 text-xs">参照先エンドポイント (任意)</label>
-          <input type="text" id="cfg-ref-endpoint" placeholder="categories (複数指定はカンマ区切り)" class="w-full border border-slate-300 rounded-xl px-3 py-2 focus:outline-none focus:ring-2 focus:ring-indigo-500">
+          <label class="block font-medium text-slate-700 text-xs">一覧表示用フィールド名 (任意)</label>
+          <input type="text" id="cfg-title-field" placeholder="空欄時はスキーマの先頭テキストを自動採用" class="w-full border border-slate-300 rounded-xl px-3 py-2 focus:outline-none focus:ring-2 focus:ring-indigo-500">
         </div>
       </div>
       <div class="pt-2">
         <button onclick="saveSettings()" class="w-full bg-indigo-600 hover:bg-indigo-700 text-white font-bold py-3 rounded-xl shadow-md active:scale-98 transition text-sm">
-          設定を保存して更新
+          設定を保存して同期
         </button>
       </div>
     </div>
@@ -168,7 +151,6 @@
   <!-- Editor Modal -->
   <div id="modal-editor" class="fixed inset-0 bg-slate-900/60 backdrop-blur-sm z-50 flex items-end sm:items-center justify-center hidden">
     <div class="bg-white w-full sm:max-w-2xl rounded-t-2xl sm:rounded-2xl p-4 sm:p-5 shadow-2xl flex flex-col h-[94vh] sm:h-[88vh]">
-      <!-- Header -->
       <div class="flex items-center justify-between border-b pb-3 flex-shrink-0">
         <div class="flex items-center space-x-2">
           <span id="editor-title" class="font-bold text-slate-800 text-base">編集</span>
@@ -179,18 +161,8 @@
         </button>
       </div>
 
-      <!-- Fields Container -->
       <div id="editor-fields" class="flex-1 overflow-y-auto py-3.5 space-y-4 no-scrollbar"></div>
 
-      <!-- Add Dynamic Field (新規作成時に追加できるボタン) -->
-      <div class="pt-1 pb-2 flex-shrink-0 border-t border-slate-100 flex items-center justify-between">
-        <button type="button" onclick="promptAddNewField()" class="text-xs text-indigo-600 hover:text-indigo-800 font-bold flex items-center gap-1 py-1">
-          <i class="fa-solid fa-plus"></i> フィールドを追加
-        </button>
-        <span class="text-[10px] text-slate-400">スキーマ推論により入力枠が生成されています</span>
-      </div>
-
-      <!-- Footer Buttons -->
       <div class="border-t pt-3 flex items-center justify-between gap-2.5 flex-shrink-0 safe-bottom">
         <button id="btn-delete" onclick="deleteContent()" class="text-rose-600 bg-rose-50 hover:bg-rose-100 px-3.5 py-2.5 rounded-xl font-bold flex items-center gap-1 active:scale-95 transition text-xs">
           <i class="fa-solid fa-trash-can"></i>
@@ -208,98 +180,42 @@
     </div>
   </div>
 
-  <!-- Toast Notification -->
   <div id="toast" class="fixed bottom-6 left-1/2 -translate-x-1/2 bg-slate-900/95 backdrop-blur-md text-white text-xs px-4 py-2.5 rounded-full shadow-2xl transition-all duration-300 opacity-0 pointer-events-none z-50 flex items-center gap-2 max-w-[90vw]">
     <i id="toast-icon" class="fa-solid fa-circle-info text-indigo-400"></i>
     <span id="toast-msg" class="truncate">通知メッセージ</span>
   </div>
 
-  <!-- Hidden File Input for Media Upload -->
   <input type="file" id="media-uploader-input" class="hidden" accept="image/*">
 
   <script>
-    // --- IndexedDB & Local Storage Manager ---
-    const DB_NAME = 'MicroCMSMobileDB_v2';
-    const STORE_NAME = 'configStore';
-
-    function initDB() {
-      return new Promise((resolve, reject) => {
-        const req = indexedDB.open(DB_NAME, 1);
-        req.onupgradeneeded = (e) => {
-          const db = e.target.result;
-          if (!db.objectStoreNames.contains(STORE_NAME)) {
-            db.createObjectStore(STORE_NAME);
-          }
-        };
-        req.onsuccess = () => resolve(req.result);
-        req.onerror = () => reject(req.error);
-      });
-    }
-
-    async function getStoredConfig() {
-      try {
-        const db = await initDB();
-        return new Promise((resolve) => {
-          const tx = db.transaction(STORE_NAME, 'readonly');
-          const store = tx.objectStore(STORE_NAME);
-          const req = store.get('mc_config');
-          req.onsuccess = () => resolve(req.result || getLocalStorageConfig());
-          req.onerror = () => resolve(getLocalStorageConfig());
-        });
-      } catch (e) {
-        return getLocalStorageConfig();
-      }
-    }
-
-    function getLocalStorageConfig() {
+    // --- Config & Storage Manager ---
+    function getStoredConfig() {
       return {
         domain: localStorage.getItem('mc_domain') || '',
         apiKey: localStorage.getItem('mc_apikey') || '',
         endpoint: localStorage.getItem('mc_endpoint') || '',
-        apiType: localStorage.getItem('mc_api_type') || 'list',
-        titleField: localStorage.getItem('mc_title_field') || '',
-        refEndpoint: localStorage.getItem('mc_ref_endpoint') || '',
-        schemaCache: JSON.parse(localStorage.getItem('mc_schema_cache') || '{}')
+        titleField: localStorage.getItem('mc_title_field') || ''
       };
     }
 
-    async function saveStoredConfig(cfg) {
+    function saveStoredConfig(cfg) {
       localStorage.setItem('mc_domain', cfg.domain);
       localStorage.setItem('mc_apikey', cfg.apiKey);
       localStorage.setItem('mc_endpoint', cfg.endpoint);
-      localStorage.setItem('mc_api_type', cfg.apiType || 'list');
       localStorage.setItem('mc_title_field', cfg.titleField || '');
-      localStorage.setItem('mc_ref_endpoint', cfg.refEndpoint || '');
-      localStorage.setItem('mc_schema_cache', JSON.stringify(cfg.schemaCache || {}));
-      try {
-        const db = await initDB();
-        const tx = db.transaction(STORE_NAME, 'readwrite');
-        tx.objectStore(STORE_NAME).put(cfg, 'mc_config');
-      } catch (e) {
-        console.warn('DB Save fallback to localStorage', e);
-      }
     }
 
-    // --- State Management ---
-    let config = {
-      domain: '',
-      apiKey: '',
-      endpoint: '',
-      apiType: 'list', // 'list' or 'object'
-      titleField: '',
-      refEndpoint: '',
-      schemaCache: {}
-    };
-
+    // --- State ---
+    let config = { domain: '', apiKey: '', endpoint: '', titleField: '' };
+    let apiSchema = { apiType: 'list', fields: [] }; // microCMS API Schema
     let itemsData = [];
     let singleObjectData = null;
-    let referenceCandidates = {};
+    let referenceCache = {};
     let currentEditingItem = null;
     let isCreating = false;
-    let currentStatusFilter = 'ALL';
-    let currentUploadTargetField = null; // 画像アップロード時の対象フィールド・エディタ
+    let currentUploadTarget = null;
 
-    // --- DOM Elements ---
+    // --- Elements ---
     const setupBanner = document.getElementById('setup-banner');
     const contentContainer = document.getElementById('content-container');
     const listControls = document.getElementById('list-controls');
@@ -310,31 +226,72 @@
     const modalEditor = document.getElementById('modal-editor');
     const mediaUploaderInput = document.getElementById('media-uploader-input');
 
-    // --- Initializer ---
     window.onload = async () => {
-      config = await getStoredConfig();
+      config = getStoredConfig();
       if (config.domain && config.apiKey && config.endpoint) {
-        fetchContents();
+        initLoad();
       } else {
         openSettingsModal();
       }
-
       document.getElementById('btn-settings').addEventListener('click', openSettingsModal);
       document.getElementById('btn-create').addEventListener('click', () => openEditorModal(null));
-      searchInput.addEventListener('input', () => renderList(filterItemsData()));
+      searchInput.addEventListener('input', () => renderList(filterList()));
       mediaUploaderInput.addEventListener('change', handleFileSelected);
     };
 
-    // --- API Handlers ---
-    async function fetchContents() {
+    // --- Initialization & API Operations ---
+    async function initLoad() {
       if (!config.domain || !config.apiKey || !config.endpoint) return;
-      showToast('データ取得中...', 'fa-spinner fa-spin');
-      
-      const isObject = config.apiType === 'object';
-      const url = `https://${config.domain}.microcms.io/api/v1/${config.endpoint}${isObject ? '?draftKey=1' : '?draftKey=1&limit=50'}`;
+      showToast('スキーマとデータを取得中...', 'fa-spinner fa-spin');
+
+      // 1. Management APIからスキーマの取得を試みる
+      await fetchSchemaFromManagementApi();
+
+      // 2. コンテンツの取得
+      await fetchContents();
+    }
+
+    // microCMS Management API: スキーマ・API種別を公式定義から直接取得
+    async function fetchSchemaFromManagementApi() {
+      try {
+        const url = `https://${config.domain}.microcms-management.io/api/v1/apis/${config.endpoint}`;
+        const res = await fetch(url, {
+          headers: { 'X-MICROCMS-API-KEY': config.apiKey }
+        });
+
+        if (res.ok) {
+          const schema = await res.json();
+          apiSchema = {
+            apiType: schema.apiType || 'list', // 'list' or 'object'
+            fields: schema.fields || []
+          };
+          updateHeaderBadge(true);
+          return;
+        }
+      } catch (e) {
+        console.warn('Management API unavailable:', e);
+      }
+
+      // マネジメントAPI権限がない場合のフォールバック（暫定枠）
+      updateHeaderBadge(false);
+      apiSchema = { apiType: 'list', fields: [] };
+    }
+
+    function updateHeaderBadge(isSchemaSynced) {
+      const title = document.getElementById('header-api-title');
+      const badge = document.getElementById('header-api-badge');
+      title.textContent = `${config.endpoint}`;
+      badge.textContent = `${apiSchema.apiType.toUpperCase()} ${isSchemaSynced ? '(Schema同期済)' : '(コンテンツ推論)'}`;
+      badge.className = isSchemaSynced ? 'text-[10px] text-emerald-300' : 'text-[10px] text-amber-300';
+    }
+
+    // コンテンツ取得
+    async function fetchContents() {
+      const isObject = apiSchema.apiType === 'object';
+      const endpointUrl = `https://${config.domain}.microcms.io/api/v1/${config.endpoint}${isObject ? '?draftKey=1' : '?draftKey=1&limit=50'}`;
 
       try {
-        const res = await fetch(url, {
+        const res = await fetch(endpointUrl, {
           headers: { 'X-MICROCMS-API-KEY': config.apiKey }
         });
         if (!res.ok) throw new Error(`エラー (${res.status})`);
@@ -343,57 +300,102 @@
         setupBanner.classList.add('hidden');
         contentContainer.classList.remove('hidden');
 
-        if (isObject) {
+        if (isObject || (!Array.isArray(data.contents) && !data.contents)) {
+          // オブジェクト形式判定
+          apiSchema.apiType = 'object';
           singleObjectData = data;
           itemsData = [];
           listControls.classList.add('hidden');
           objectControls.classList.remove('hidden');
-          document.getElementById('object-endpoint-title').textContent = `${config.endpoint} (単一レコード)`;
-          updateInferredSchema([data]);
+          document.getElementById('object-title-display').textContent = `${config.endpoint} (単一データ)`;
+
+          // スキーマが空ならオブジェクトのキーから動的生成（決め打ちはしない）
+          if (apiSchema.fields.length === 0) {
+            extractDynamicFields([data]);
+          }
           renderSingleObjectPreview(data);
         } else {
-          itemsData = data.contents || [];
+          // リスト形式
+          apiSchema.apiType = 'list';
           singleObjectData = null;
+          itemsData = data.contents || [];
           listControls.classList.remove('hidden');
           objectControls.classList.add('hidden');
-          updateInferredSchema(itemsData);
-          renderList(filterItemsData());
+
+          if (apiSchema.fields.length === 0) {
+            extractDynamicFields(itemsData);
+          }
+          renderList(filterList());
         }
 
-        fetchReferenceCandidates();
-        showToast('取得が完了しました', 'fa-check text-emerald-400');
+        // 参照先コンテンツの先読み
+        preloadReferenceFields();
+        showToast('同期が完了しました', 'fa-check text-emerald-400');
       } catch (err) {
         console.error(err);
-        showToast(`取得失敗: ${err.message}`, 'fa-triangle-exclamation text-rose-400');
+        showToast(`データ取得失敗: ${err.message}`, 'fa-triangle-exclamation text-rose-400');
       }
     }
 
-    // 参照プルダウンの取得
-    async function fetchReferenceCandidates(fieldName = '') {
-      const endpoints = config.refEndpoint
-        ? config.refEndpoint.split(',').map(s => s.trim())
-        : (fieldName ? [`${fieldName}s`] : ['categories']);
-
-      for (const ep of endpoints) {
-        if (!ep || referenceCandidates[ep]) continue;
-        try {
-          const url = `https://${config.domain}.microcms.io/api/v1/${ep}?limit=100`;
-          const res = await fetch(url, {
-            headers: { 'X-MICROCMS-API-KEY': config.apiKey }
-          });
-          if (res.ok) {
-            const data = await res.json();
-            referenceCandidates[ep] = data.contents || [];
+    // スキーマが取れなかった場合のみ、実データからキーと型を抽出（決め打ちは一切排除）
+    function extractDynamicFields(records) {
+      const fieldMap = {};
+      records.forEach(rec => {
+        Object.entries(rec).forEach(([k, v]) => {
+          if (['id', 'createdAt', 'updatedAt', 'publishedAt', 'revisedAt', 'closedAt'].includes(k)) return;
+          if (!fieldMap[k]) {
+            fieldMap[k] = {
+              fieldId: k,
+              name: k,
+              kind: inferKindFromValue(v)
+            };
           }
-        } catch (e) {
-          console.warn(`Failed to fetch ref endpoint ${ep}:`, e);
+        });
+      });
+      apiSchema.fields = Object.values(fieldMap);
+    }
+
+    function inferKindFromValue(v) {
+      if (typeof v === 'boolean') return 'boolean';
+      if (typeof v === 'number') return 'number';
+      if (typeof v === 'object' && v !== null) {
+        if (v.url) return 'media';
+        if (v.id) return 'relation';
+        return 'custom';
+      }
+      if (typeof v === 'string') {
+        if (/^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}/.test(v)) return 'date';
+        if (/<[a-z][\s\S]*>/i.test(v)) return 'richEditor';
+        if (v.length > 50 || v.includes('\n')) return 'textArea';
+      }
+      return 'text';
+    }
+
+    async function preloadReferenceFields() {
+      for (const f of apiSchema.fields) {
+        if (f.kind === 'relation' && f.referenceApi && f.referenceApi.id) {
+          fetchReferenceCandidates(f.referenceApi.id);
         }
       }
     }
 
-    // 画像アップロードAPI (POST /api/v1/media)
+    async function fetchReferenceCandidates(refApiId) {
+      if (!refApiId || referenceCache[refApiId]) return;
+      try {
+        const res = await fetch(`https://${config.domain}.microcms.io/api/v1/${refApiId}?limit=100`, {
+          headers: { 'X-MICROCMS-API-KEY': config.apiKey }
+        });
+        if (res.ok) {
+          const data = await res.json();
+          referenceCache[refApiId] = data.contents || [];
+        }
+      } catch (e) {
+        console.warn(`Failed to preload relation: ${refApiId}`, e);
+      }
+    }
+
+    // microCMS Media API: 画像ファイル直接アップロード
     async function uploadMediaFile(file) {
-      if (!file) return null;
       showToast('画像をアップロード中...', 'fa-spinner fa-spin');
       const formData = new FormData();
       formData.append('files', file);
@@ -401,89 +403,34 @@
       try {
         const res = await fetch(`https://${config.domain}.microcms.io/api/v1/media`, {
           method: 'POST',
-          headers: {
-            'X-MICROCMS-API-KEY': config.apiKey
-          },
+          headers: { 'X-MICROCMS-API-KEY': config.apiKey },
           body: formData
         });
         if (!res.ok) throw new Error(`アップロード失敗 (${res.status})`);
         const data = await res.json();
-        showToast('アップロード完了', 'fa-check text-emerald-400');
+        showToast('画像アップロード完了', 'fa-check text-emerald-400');
         return data.url;
       } catch (err) {
         console.error(err);
-        showToast(`画像送信エラー: ${err.message}`, 'fa-triangle-exclamation text-rose-400');
+        showToast(`画像送信失敗: ${err.message}`, 'fa-triangle-exclamation text-rose-400');
         return null;
       }
     }
 
-    // --- Schema Inference Engine (型推論 & 新規入力枠生成) ---
-    function detectType(key, val) {
-      if (['id', 'createdAt', 'updatedAt', 'publishedAt', 'revisedAt', 'closedAt'].includes(key)) return 'system';
-      if (typeof val === 'boolean') return 'boolean';
-      if (typeof val === 'number') return 'number';
-      if (typeof val === 'object' && val !== null) {
-        if (val.url) return 'media';
-        if (val.id) return 'relation';
-        if (Array.isArray(val)) return 'array';
-        return 'object';
-      }
-      if (typeof val === 'string') {
-        if (/^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}/.test(val)) return 'datetime';
-        if (key.toLowerCase().includes('content') || key.toLowerCase().includes('body') || /<[a-z][\s\S]*>/i.test(val)) {
-          return 'richEditor';
-        }
-        if (val.length > 60 || val.includes('\n')) return 'textarea';
-        return 'text';
-      }
-      return 'text';
-    }
-
-    function updateInferredSchema(records) {
-      if (!config.schemaCache) config.schemaCache = {};
-      const endpointSchema = config.schemaCache[config.endpoint] || {};
-
-      records.forEach(rec => {
-        Object.entries(rec).forEach(([k, v]) => {
-          if (['createdAt', 'updatedAt', 'publishedAt', 'revisedAt', 'closedAt'].includes(k)) return;
-          const currentType = detectType(k, v);
-          if (!endpointSchema[k] || endpointSchema[k] === 'text') {
-            endpointSchema[k] = currentType;
-          }
-        });
-      });
-
-      // 最低限のデフォルト枠
-      if (Object.keys(endpointSchema).length === 0) {
-        endpointSchema['title'] = 'text';
-        endpointSchema['content'] = 'richEditor';
-      }
-
-      config.schemaCache[config.endpoint] = endpointSchema;
-      saveStoredConfig(config);
-    }
-
-    // --- Content Helpers ---
+    // --- Dynamic Title Helper ---
     function getItemTitle(item) {
-      if (!item) return '無題';
-      if (config.titleField && item[config.titleField]) {
+      if (!item) return '（新規）';
+      // ユーザー指定キーがあれば最優先
+      if (config.titleField && item[config.titleField] !== undefined) {
         return String(item[config.titleField]).replace(/<[^>]*>?/gm, '').trim();
       }
-      return item.title || item.name || item.question || item.subject || item.id || '（タイトルなし）';
-    }
-
-    function getItemStatus(item) {
-      if (!item) return 'DRAFT';
-      if (item.closedAt && new Date(item.closedAt) <= new Date()) return 'CLOSED';
-      if (item.publishedAt) return 'PUBLISHED';
-      return 'DRAFT';
-    }
-
-    function formatRelationValue(val) {
-      if (!val) return '';
-      if (Array.isArray(val)) return val.map(formatRelationValue).join(', ');
-      if (typeof val === 'object') return val.title || val.name || val.id || JSON.stringify(val);
-      return String(val);
+      // スキーマの先頭のテキスト型フィールドを採用
+      const primaryTextField = apiSchema.fields.find(f => ['text', 'textArea'].includes(f.kind));
+      if (primaryTextField && item[primaryTextField.fieldId]) {
+        return String(item[primaryTextField.fieldId]).replace(/<[^>]*>?/gm, '').trim();
+      }
+      // 存在しなければID、または最初の値
+      return item.id || Object.values(item).find(v => typeof v === 'string' && v.trim()) || '（名称なし）';
     }
 
     // --- UI Renderers ---
@@ -494,13 +441,17 @@
       
       const updatedAt = new Date(data.updatedAt || Date.now()).toLocaleString('ja-JP');
       let fieldsHtml = '';
-      Object.entries(data).forEach(([k, v]) => {
-        if (['createdAt', 'updatedAt', 'publishedAt', 'revisedAt'].includes(k)) return;
-        const valStr = typeof v === 'object' ? JSON.stringify(v) : String(v);
+
+      apiSchema.fields.forEach(field => {
+        const val = data[field.fieldId];
+        let displayVal = val === undefined || val === null ? '<span class="text-slate-300">未設定</span>' : escapeHtml(typeof val === 'object' ? JSON.stringify(val) : String(val));
+        if (field.kind === 'media' && val && val.url) {
+          displayVal = `<img src="${val.url}" class="h-16 w-auto rounded-lg border mt-1">`;
+        }
         fieldsHtml += `
-          <div class="text-xs border-b border-slate-100 pb-1.5 pt-1">
-            <span class="font-bold text-slate-500">${k}:</span>
-            <span class="text-slate-800 ml-1 break-all">${escapeHtml(valStr.substring(0, 100))}</span>
+          <div class="text-xs border-b border-slate-100 pb-2 pt-1">
+            <span class="font-bold text-slate-500">${escapeHtml(field.name || field.fieldId)}:</span>
+            <div class="text-slate-800 mt-0.5 break-all">${displayVal}</div>
           </div>
         `;
       });
@@ -510,31 +461,17 @@
           <span class="font-bold text-slate-800 text-sm">現在の設定値</span>
           <span class="text-[10px] text-slate-400"><i class="fa-regular fa-clock mr-1"></i>${updatedAt}</span>
         </div>
-        <div class="bg-slate-50 p-3 rounded-xl max-h-80 overflow-y-auto space-y-1">
-          ${fieldsHtml || '<p class="text-xs text-slate-400">データがありません</p>'}
+        <div class="bg-slate-50 p-3 rounded-xl max-h-96 overflow-y-auto space-y-1">
+          ${fieldsHtml}
         </div>
       `;
       itemsList.appendChild(card);
     }
 
-    function setStatusFilter(status) {
-      currentStatusFilter = status;
-      document.querySelectorAll('.status-tab-btn').forEach(btn => {
-        if (btn.dataset.status === status) {
-          btn.className = 'status-tab-btn px-3 py-1 rounded-lg font-medium bg-indigo-600 text-white shadow-sm';
-        } else {
-          btn.className = 'status-tab-btn px-3 py-1 rounded-lg font-medium bg-white text-slate-600 border border-slate-200';
-        }
-      });
-      renderList(filterItemsData());
-    }
-
-    function filterItemsData() {
+    function filterList() {
       const q = searchInput.value.toLowerCase().trim();
+      if (!q) return itemsData;
       return itemsData.filter(item => {
-        const status = getItemStatus(item);
-        if (currentStatusFilter !== 'ALL' && status !== currentStatusFilter) return false;
-        if (!q) return true;
         const title = getItemTitle(item).toLowerCase();
         const id = (item.id || '').toLowerCase();
         return title.includes(q) || id.includes(q);
@@ -547,7 +484,7 @@
         itemsList.innerHTML = `
           <div class="text-center py-12 text-slate-400 bg-white rounded-2xl border border-slate-200/60 p-5">
             <i class="fa-regular fa-folder-open text-3xl mb-2 text-slate-300"></i>
-            <p class="text-xs font-medium">コンテンツが見つかりません</p>
+            <p class="text-xs font-medium">コンテンツがありません</p>
           </div>
         `;
         return;
@@ -555,14 +492,10 @@
 
       list.forEach(item => {
         const title = getItemTitle(item);
-        const status = getItemStatus(item);
         const updatedAt = new Date(item.updatedAt || Date.now()).toLocaleDateString('ja-JP', {
           month: 'numeric', day: 'numeric', hour: '2-digit', minute: '2-digit'
         });
-
-        const statusBadge = status === 'PUBLISHED'
-          ? '<span class="text-[9px] bg-emerald-50 text-emerald-600 border border-emerald-200 px-1.5 py-0.5 rounded font-bold">公開中</span>'
-          : '<span class="text-[9px] bg-amber-50 text-amber-600 border border-amber-200 px-1.5 py-0.5 rounded font-bold">下書き</span>';
+        const isDraft = !item.publishedAt;
 
         const card = document.createElement('div');
         card.className = 'bg-white rounded-2xl p-3.5 shadow-sm border border-slate-200/80 active:scale-98 transition cursor-pointer space-y-2 hover:border-indigo-200';
@@ -571,7 +504,7 @@
           <div class="flex items-center justify-between gap-2">
             <h3 class="font-bold text-slate-800 text-sm sm:text-base line-clamp-1 flex-1">${escapeHtml(title)}</h3>
             <div class="flex items-center gap-1.5 flex-shrink-0">
-              ${statusBadge}
+              ${isDraft ? '<span class="text-[9px] bg-amber-50 text-amber-600 border border-amber-200 px-1.5 py-0.5 rounded font-bold">下書き</span>' : '<span class="text-[9px] bg-emerald-50 text-emerald-600 border border-emerald-200 px-1.5 py-0.5 rounded font-bold">公開中</span>'}
               <span class="text-[10px] bg-slate-100 text-slate-500 px-1.5 py-0.5 rounded font-mono">${escapeHtml(item.id || '')}</span>
             </div>
           </div>
@@ -584,11 +517,11 @@
       });
     }
 
-    // --- Dynamic Editor Modal & Fields Generator ---
+    // --- Dynamic Form Generator (スキーマに基づく入力枠生成) ---
     async function openEditorModal(item = null) {
       currentEditingItem = item;
       isCreating = !item;
-      const isObject = config.apiType === 'object';
+      const isObject = apiSchema.apiType === 'object';
 
       const titleEl = document.getElementById('editor-title');
       const badgeEl = document.getElementById('editor-status-badge');
@@ -602,8 +535,8 @@
         badgeEl.className = 'px-2 py-0.5 text-[10px] rounded-full font-bold bg-purple-100 text-purple-700';
         deleteBtn.classList.add('hidden');
       } else if (isCreating) {
-        titleEl.textContent = '新規コンテンツ';
-        badgeEl.textContent = '新規';
+        titleEl.textContent = '新規レコード';
+        badgeEl.textContent = 'NEW';
         badgeEl.className = 'px-2 py-0.5 text-[10px] rounded-full font-bold bg-emerald-100 text-emerald-700';
         deleteBtn.classList.add('hidden');
       } else {
@@ -613,62 +546,70 @@
         deleteBtn.classList.remove('hidden');
       }
 
-      // スキーマ定義またはキャッシュからのフィールド一覧抽出
-      const endpointSchema = (config.schemaCache && config.schemaCache[config.endpoint]) || {};
-      const targetObj = item || {};
-      const allKeys = Array.from(new Set([...Object.keys(endpointSchema), ...Object.keys(targetObj)]));
-
-      // リスト形式の新規作成時のみ、カスタムIDフィールドを先頭に追加
+      // リスト形式の新規作成時のみ、カスタムID入力枠を一番上に追加
       if (!isObject && isCreating) {
-        appendFieldInput(fieldsContainer, 'id', 'text', '', 'カスタムID（空欄で自動採番）');
+        appendFieldBox(fieldsContainer, { fieldId: 'id', name: 'カスタムID (任意)', kind: 'idInput' }, '');
       }
 
-      for (const key of allKeys) {
-        if (['id', 'createdAt', 'updatedAt', 'publishedAt', 'revisedAt', 'closedAt'].includes(key)) continue;
-        const val = targetObj[key] !== undefined ? targetObj[key] : '';
-        const detectedType = endpointSchema[key] || detectType(key, val);
-        await appendFieldInput(fieldsContainer, key, detectedType, val);
+      // スキーマで定義されたフィールド群を正確にレンダリング
+      for (const field of apiSchema.fields) {
+        const val = item ? item[field.fieldId] : undefined;
+        await appendFieldBox(fieldsContainer, field, val);
       }
 
       modalEditor.classList.remove('hidden');
     }
 
-    async function appendFieldInput(container, key, type, val, placeholder = '') {
+    async function appendFieldBox(container, field, val) {
       const fieldGroup = document.createElement('div');
-      fieldGroup.className = 'space-y-1.5 bg-slate-50 p-3 rounded-xl border border-slate-200/70 field-group';
-      fieldGroup.dataset.fieldName = key;
-      fieldGroup.dataset.fieldType = type;
+      fieldGroup.className = 'space-y-1.5 bg-slate-50 p-3 rounded-xl border border-slate-200/70';
+      fieldGroup.dataset.fieldId = field.fieldId;
+      fieldGroup.dataset.kind = field.kind;
 
       const label = document.createElement('label');
-      label.className = 'block font-bold text-slate-700 text-xs tracking-wider uppercase flex items-center justify-between';
-      label.innerHTML = `<span>${key}</span><span class="text-[10px] text-slate-400 font-normal">${type}</span>`;
+      label.className = 'block font-bold text-slate-700 text-xs flex items-center justify-between';
+      label.innerHTML = `
+        <span>${escapeHtml(field.name || field.fieldId)} ${field.required ? '<span class="text-rose-500">*</span>' : ''}</span>
+        <span class="text-[10px] text-slate-400 font-mono font-normal">${field.fieldId} (${field.kind})</span>
+      `;
       fieldGroup.appendChild(label);
 
-      switch (type) {
-        case 'boolean': {
-          const wrap = document.createElement('div');
-          wrap.className = 'flex items-center space-x-2 pt-1';
-          wrap.innerHTML = `
-            <input type="checkbox" name="${key}" ${val ? 'checked' : ''} class="w-5 h-5 text-indigo-600 rounded border-slate-300">
-            <span class="text-xs text-slate-700">有効 (true)</span>
-          `;
-          fieldGroup.appendChild(wrap);
-          break;
-        }
-        case 'number': {
+      switch (field.kind) {
+        case 'idInput': {
           const input = document.createElement('input');
-          input.type = 'number';
-          input.name = key;
-          input.value = val !== undefined && val !== null ? val : '';
-          input.placeholder = placeholder || key;
+          input.type = 'text';
+          input.name = 'id';
+          input.placeholder = '空欄時は自動採番されます';
           input.className = 'w-full border border-slate-300 rounded-xl px-3 py-2 bg-white text-sm';
           fieldGroup.appendChild(input);
           break;
         }
-        case 'datetime': {
+
+        case 'boolean': {
+          const wrap = document.createElement('div');
+          wrap.className = 'flex items-center space-x-2 pt-1';
+          wrap.innerHTML = `
+            <input type="checkbox" name="${field.fieldId}" ${val ? 'checked' : ''} class="w-5 h-5 text-indigo-600 rounded border-slate-300">
+            <span class="text-xs text-slate-700 font-medium">有効にする</span>
+          `;
+          fieldGroup.appendChild(wrap);
+          break;
+        }
+
+        case 'number': {
+          const input = document.createElement('input');
+          input.type = 'number';
+          input.name = field.fieldId;
+          input.value = val !== undefined && val !== null ? val : '';
+          input.className = 'w-full border border-slate-300 rounded-xl px-3 py-2 bg-white text-sm';
+          fieldGroup.appendChild(input);
+          break;
+        }
+
+        case 'date': {
           const input = document.createElement('input');
           input.type = 'datetime-local';
-          input.name = key;
+          input.name = field.fieldId;
           let dtStr = '';
           if (val) {
             const d = new Date(val);
@@ -682,33 +623,37 @@
           fieldGroup.appendChild(input);
           break;
         }
-        case 'media': {
-          const mediaWrap = document.createElement('div');
-          mediaWrap.className = 'space-y-2';
-          const imgUrl = (val && typeof val === 'object') ? (val.url || '') : (val || '');
-          mediaWrap.innerHTML = `
-            <div class="flex gap-2">
-              <input type="text" name="${key}.url" value="${escapeHtml(imgUrl)}" placeholder="https://images.microcms-assets.io/..." class="flex-1 border border-slate-300 rounded-xl px-3 py-2 bg-white text-xs">
-              <button type="button" onclick="triggerMediaUpload('${key}')" class="bg-indigo-50 text-indigo-600 border border-indigo-200 px-3 py-2 rounded-xl text-xs font-bold active:scale-95 transition flex items-center gap-1 flex-shrink-0">
-                <i class="fa-solid fa-cloud-arrow-up"></i> アップロード
-              </button>
-            </div>
-            ${imgUrl ? `<img src="${escapeHtml(imgUrl)}" id="preview-${key}" class="h-24 w-auto rounded-xl object-cover border border-slate-200 shadow-sm mt-1">` : `<img id="preview-${key}" class="h-24 w-auto rounded-xl object-cover border border-slate-200 shadow-sm mt-1 hidden">`}
-          `;
-          fieldGroup.appendChild(mediaWrap);
+
+        case 'selectRule': {
+          const select = document.createElement('select');
+          select.name = field.fieldId;
+          select.className = 'w-full border border-slate-300 rounded-xl px-3 py-2 bg-white text-sm';
+          select.innerHTML = '<option value="">-- 選択してください --</option>';
+          if (Array.isArray(field.selectItems)) {
+            field.selectItems.forEach(item => {
+              const opt = document.createElement('option');
+              opt.value = item.value;
+              opt.textContent = item.value;
+              if (item.value === val) opt.selected = true;
+              select.appendChild(opt);
+            });
+          }
+          fieldGroup.appendChild(select);
           break;
         }
+
         case 'relation': {
-          const refEp = config.refEndpoint ? config.refEndpoint.split(',')[0].trim() : `${key}s`;
-          await fetchReferenceCandidates(refEp);
-          const candidates = referenceCandidates[refEp] || [];
-          const selectedId = (val && typeof val === 'object') ? val.id : val;
+          const refApiId = field.referenceApi ? field.referenceApi.id : `${field.fieldId}s`;
+          await fetchReferenceCandidates(refApiId);
+          const candidates = referenceCache[refApiId] || [];
+          const selectedId = (val && typeof val === 'object') ? val.id : (val || '');
 
           const select = document.createElement('select');
-          select.name = key;
+          select.name = field.fieldId;
           select.dataset.isRelation = "true";
           select.className = 'w-full border border-slate-300 rounded-xl px-3 py-2 bg-white text-sm';
           select.innerHTML = '<option value="">-- 未選択 --</option>';
+
           candidates.forEach(c => {
             const opt = document.createElement('option');
             opt.value = c.id;
@@ -719,57 +664,73 @@
           fieldGroup.appendChild(select);
           break;
         }
+
+        case 'media': {
+          const mediaWrap = document.createElement('div');
+          mediaWrap.className = 'space-y-2';
+          const imgUrl = (val && typeof val === 'object') ? (val.url || '') : (val || '');
+          mediaWrap.innerHTML = `
+            <div class="flex gap-2">
+              <input type="text" name="${field.fieldId}.url" value="${escapeHtml(imgUrl)}" placeholder="https://images.microcms-assets.io/..." class="flex-1 border border-slate-300 rounded-xl px-3 py-2 bg-white text-xs">
+              <button type="button" onclick="triggerMediaUpload('${field.fieldId}')" class="bg-indigo-50 text-indigo-600 border border-indigo-200 px-3 py-2 rounded-xl text-xs font-bold active:scale-95 transition flex items-center gap-1 flex-shrink-0">
+                <i class="fa-solid fa-cloud-arrow-up"></i> アップロード
+              </button>
+            </div>
+            <img src="${escapeHtml(imgUrl)}" id="preview-${field.fieldId}" class="h-24 w-auto rounded-xl object-cover border border-slate-200 shadow-sm mt-1 ${imgUrl ? '' : 'hidden'}">
+          `;
+          fieldGroup.appendChild(mediaWrap);
+          break;
+        }
+
         case 'richEditor': {
-          // リッチテキストツールバー + エディタ
           const toolbar = document.createElement('div');
           toolbar.className = 'flex items-center gap-1 p-1 bg-slate-200/70 rounded-lg overflow-x-auto no-scrollbar text-xs mb-1';
           toolbar.innerHTML = `
-            <button type="button" onclick="insertTag('${key}', '<h2>', '</h2>')" class="px-2 py-1 bg-white rounded hover:bg-slate-50 font-bold">H2</button>
-            <button type="button" onclick="insertTag('${key}', '<h3>', '</h3>')" class="px-2 py-1 bg-white rounded hover:bg-slate-50 font-bold">H3</button>
-            <button type="button" onclick="insertTag('${key}', '<b>', '</b>')" class="px-2 py-1 bg-white rounded hover:bg-slate-50 font-bold"><i class="fa-solid fa-bold"></i></button>
-            <button type="button" onclick="insertTag('${key}', '<ul>\\n  <li>', '</li>\\n</ul>')" class="px-2 py-1 bg-white rounded hover:bg-slate-50"><i class="fa-solid fa-list-ul"></i></button>
-            <button type="button" onclick="insertTag('${key}', '<blockquote>', '</blockquote>')" class="px-2 py-1 bg-white rounded hover:bg-slate-50"><i class="fa-solid fa-quote-left"></i></button>
-            <button type="button" onclick="promptInsertLink('${key}')" class="px-2 py-1 bg-white rounded hover:bg-slate-50"><i class="fa-solid fa-link"></i></button>
-            <button type="button" onclick="triggerMediaUploadForEditor('${key}')" class="px-2 py-1 bg-indigo-50 text-indigo-600 rounded hover:bg-indigo-100 font-bold"><i class="fa-regular fa-image"></i> 画像挿入</button>
+            <button type="button" onclick="insertTag('${field.fieldId}', '<h2>', '</h2>')" class="px-2 py-1 bg-white rounded hover:bg-slate-50 font-bold">H2</button>
+            <button type="button" onclick="insertTag('${field.fieldId}', '<h3>', '</h3>')" class="px-2 py-1 bg-white rounded hover:bg-slate-50 font-bold">H3</button>
+            <button type="button" onclick="insertTag('${field.fieldId}', '<b>', '</b>')" class="px-2 py-1 bg-white rounded hover:bg-slate-50 font-bold"><i class="fa-solid fa-bold"></i></button>
+            <button type="button" onclick="insertTag('${field.fieldId}', '<ul>\\n  <li>', '</li>\\n</ul>')" class="px-2 py-1 bg-white rounded hover:bg-slate-50"><i class="fa-solid fa-list-ul"></i></button>
+            <button type="button" onclick="insertTag('${field.fieldId}', '<blockquote>', '</blockquote>')" class="px-2 py-1 bg-white rounded hover:bg-slate-50"><i class="fa-solid fa-quote-left"></i></button>
+            <button type="button" onclick="triggerMediaUploadForEditor('${field.fieldId}')" class="px-2 py-1 bg-indigo-50 text-indigo-600 rounded hover:bg-indigo-100 font-bold"><i class="fa-regular fa-image"></i> 画像挿入</button>
             <div class="ml-auto flex gap-1">
-              <button type="button" id="tab-code-${key}" onclick="toggleEditorTab('${key}', 'code')" class="px-2 py-1 bg-indigo-600 text-white rounded font-bold text-[10px]">HTML</button>
-              <button type="button" id="tab-prev-${key}" onclick="toggleEditorTab('${key}', 'prev')" class="px-2 py-1 bg-white text-slate-600 rounded font-bold text-[10px]">プレビュー</button>
+              <button type="button" id="tab-code-${field.fieldId}" onclick="toggleEditorTab('${field.fieldId}', 'code')" class="px-2 py-1 bg-indigo-600 text-white rounded font-bold text-[10px]">HTML</button>
+              <button type="button" id="tab-prev-${field.fieldId}" onclick="toggleEditorTab('${field.fieldId}', 'prev')" class="px-2 py-1 bg-white text-slate-600 rounded font-bold text-[10px]">プレビュー</button>
             </div>
           `;
 
           const textarea = document.createElement('textarea');
-          textarea.id = `editor-textarea-${key}`;
-          textarea.name = key;
+          textarea.id = `editor-textarea-${field.fieldId}`;
+          textarea.name = field.fieldId;
           textarea.rows = 6;
           textarea.value = typeof val === 'string' ? val : '';
           textarea.className = 'w-full border border-slate-300 rounded-xl p-2.5 bg-white text-sm font-mono leading-relaxed';
 
           const previewBox = document.createElement('div');
-          previewBox.id = `editor-prevbox-${key}`;
+          previewBox.id = `editor-prevbox-${field.fieldId}`;
           previewBox.className = 'w-full min-h-[140px] max-h-72 overflow-y-auto border border-slate-200 rounded-xl p-3 bg-white hidden html-preview-content';
-          previewBox.innerHTML = textarea.value || '<span class="text-slate-400 italic">（プレビュー内容なし）</span>';
+          previewBox.innerHTML = textarea.value || '<span class="text-slate-400 italic">（内容なし）</span>';
 
           fieldGroup.appendChild(toolbar);
           fieldGroup.appendChild(textarea);
           fieldGroup.appendChild(previewBox);
           break;
         }
-        case 'textarea': {
+
+        case 'textArea': {
           const textarea = document.createElement('textarea');
-          textarea.name = key;
+          textarea.name = field.fieldId;
           textarea.rows = 4;
           textarea.value = typeof val === 'string' ? val : '';
-          textarea.placeholder = placeholder || key;
           textarea.className = 'w-full border border-slate-300 rounded-xl p-2.5 bg-white text-sm';
           fieldGroup.appendChild(textarea);
           break;
         }
+
         default: {
           const input = document.createElement('input');
           input.type = 'text';
-          input.name = key;
+          input.name = field.fieldId;
           input.value = val !== undefined && val !== null ? val : '';
-          input.placeholder = placeholder || key;
           input.className = 'w-full border border-slate-300 rounded-xl px-3 py-2 bg-white text-sm';
           fieldGroup.appendChild(input);
         }
@@ -778,26 +739,7 @@
       container.appendChild(fieldGroup);
     }
 
-    function promptAddNewField() {
-      const fieldName = prompt('追加するフィールド名（キー名）を入力してください:');
-      if (!fieldName || !fieldName.trim()) return;
-      const cleanKey = fieldName.trim();
-
-      const type = prompt('フィールドの型を選択してください:\n1: text (短文)\n2: textarea (長文)\n3: richEditor (HTML/本文)\n4: number (数値)\n5: boolean (真偽値)\n6: media (画像)\n7: datetime (日時)', '1');
-      const typeMap = { '1': 'text', '2': 'textarea', '3': 'richEditor', '4': 'number', '5': 'boolean', '6': 'media', '7': 'datetime' };
-      const selectedType = typeMap[type] || 'text';
-
-      const container = document.getElementById('editor-fields');
-      appendFieldInput(container, cleanKey, selectedType, '');
-
-      // キャッシュに記憶
-      if (!config.schemaCache) config.schemaCache = {};
-      if (!config.schemaCache[config.endpoint]) config.schemaCache[config.endpoint] = {};
-      config.schemaCache[config.endpoint][cleanKey] = selectedType;
-      saveStoredConfig(config);
-    }
-
-    // --- Rich Text Editor Helpers ---
+    // --- Editor Helpers ---
     function insertTag(key, openTag, closeTag) {
       const ta = document.getElementById(`editor-textarea-${key}`);
       if (!ta) return;
@@ -808,12 +750,6 @@
       ta.value = ta.value.substring(0, start) + rep + ta.value.substring(end);
       ta.focus();
       ta.setSelectionRange(start + openTag.length, start + rep.length - closeTag.length);
-    }
-
-    function promptInsertLink(key) {
-      const url = prompt('リンク先URLを入力してください:', 'https://');
-      if (!url) return;
-      insertTag(key, `<a href="${url}" target="_blank">`, '</a>');
     }
 
     function toggleEditorTab(key, tab) {
@@ -828,7 +764,7 @@
         btnCode.className = 'px-2 py-1 bg-indigo-600 text-white rounded font-bold text-[10px]';
         btnPrev.className = 'px-2 py-1 bg-white text-slate-600 rounded font-bold text-[10px]';
       } else {
-        prev.innerHTML = ta.value.trim() || '<span class="text-slate-400 italic">（プレビュー内容なし）</span>';
+        prev.innerHTML = ta.value.trim() || '<span class="text-slate-400 italic">（内容なし）</span>';
         ta.classList.add('hidden');
         prev.classList.remove('hidden');
         btnPrev.className = 'px-2 py-1 bg-indigo-600 text-white rounded font-bold text-[10px]';
@@ -836,14 +772,13 @@
       }
     }
 
-    // --- Media Upload Trigger ---
     function triggerMediaUpload(key) {
-      currentUploadTargetField = { type: 'field', key: key };
+      currentUploadTarget = { type: 'field', key: key };
       mediaUploaderInput.click();
     }
 
     function triggerMediaUploadForEditor(key) {
-      currentUploadTargetField = { type: 'editor', key: key };
+      currentUploadTarget = { type: 'editor', key: key };
       mediaUploaderInput.click();
     }
 
@@ -851,20 +786,20 @@
       const file = e.target.files[0];
       if (!file) return;
       const url = await uploadMediaFile(file);
-      e.target.value = ''; // リセット
+      e.target.value = '';
 
-      if (!url || !currentUploadTargetField) return;
+      if (!url || !currentUploadTarget) return;
 
-      if (currentUploadTargetField.type === 'field') {
-        const input = document.querySelector(`input[name="${currentUploadTargetField.key}.url"]`);
+      if (currentUploadTarget.type === 'field') {
+        const input = document.querySelector(`input[name="${currentUploadTarget.key}.url"]`);
         if (input) input.value = url;
-        const prevImg = document.getElementById(`preview-${currentUploadTargetField.key}`);
+        const prevImg = document.getElementById(`preview-${currentUploadTarget.key}`);
         if (prevImg) {
           prevImg.src = url;
           prevImg.classList.remove('hidden');
         }
-      } else if (currentUploadTargetField.type === 'editor') {
-        const ta = document.getElementById(`editor-textarea-${currentUploadTargetField.key}`);
+      } else if (currentUploadTarget.type === 'editor') {
+        const ta = document.getElementById(`editor-textarea-${currentUploadTarget.key}`);
         if (ta) {
           const imgTag = `\n<img src="${url}" alt="" />\n`;
           const pos = ta.selectionStart || ta.value.length;
@@ -877,7 +812,7 @@
       modalEditor.classList.add('hidden');
     }
 
-    // --- CRUD Actions ---
+    // --- Save / Delete Operations ---
     async function saveContent(isDraft = false) {
       const fieldsContainer = document.getElementById('editor-fields');
       const inputs = fieldsContainer.querySelectorAll('input, textarea, select');
@@ -911,14 +846,14 @@
         }
       });
 
-      showToast(isDraft ? '下書き保存中...' : '公開・保存中...', 'fa-spinner fa-spin');
+      showToast(isDraft ? '下書き保存中...' : '保存中...', 'fa-spinner fa-spin');
 
-      const isObject = config.apiType === 'object';
+      const isObject = apiSchema.apiType === 'object';
       let url = `https://${config.domain}.microcms.io/api/v1/${config.endpoint}`;
       let method = 'POST';
 
       if (isObject) {
-        method = 'PATCH'; // 単一オブジェクトの更新
+        method = 'PATCH'; // オブジェクト形式はPATCHで一括更新
       } else if (!isCreating) {
         url += `/${currentEditingItem.id}`;
         method = 'PATCH';
@@ -946,7 +881,7 @@
           throw new Error(errData.message || `エラー (${res.status})`);
         }
 
-        showToast(isDraft ? '下書き保存しました' : '保存・公開が完了しました', 'fa-check text-emerald-400');
+        showToast(isDraft ? '下書き保存しました' : '公開・保存が完了しました', 'fa-check text-emerald-400');
         closeEditorModal();
         fetchContents();
       } catch (err) {
@@ -956,7 +891,7 @@
     }
 
     async function deleteContent() {
-      if (!currentEditingItem || config.apiType === 'object') return;
+      if (!currentEditingItem || apiSchema.apiType === 'object') return;
       if (!confirm(`[${currentEditingItem.id}] を削除しますか？`)) return;
 
       showToast('削除中...', 'fa-spinner fa-spin');
@@ -981,9 +916,7 @@
       document.getElementById('cfg-domain').value = config.domain;
       document.getElementById('cfg-apikey').value = config.apiKey;
       document.getElementById('cfg-endpoint').value = config.endpoint;
-      document.getElementById('cfg-apitype').value = config.apiType || 'list';
       document.getElementById('cfg-title-field').value = config.titleField || '';
-      document.getElementById('cfg-ref-endpoint').value = config.refEndpoint || '';
       modalSettings.classList.remove('hidden');
     }
 
@@ -995,9 +928,7 @@
       const d = document.getElementById('cfg-domain').value.trim();
       const a = document.getElementById('cfg-apikey').value.trim();
       const e = document.getElementById('cfg-endpoint').value.trim();
-      const type = document.getElementById('cfg-apitype').value;
       const t = document.getElementById('cfg-title-field').value.trim();
-      const r = document.getElementById('cfg-ref-endpoint').value.trim();
 
       if (!d || !a || !e) {
         showToast('必須項目を入力してください', 'fa-triangle-exclamation text-amber-400');
@@ -1007,16 +938,14 @@
       config.domain = d;
       config.apiKey = a;
       config.endpoint = e;
-      config.apiType = type;
       config.titleField = t;
-      config.refEndpoint = r;
 
-      await saveStoredConfig(config);
+      saveStoredConfig(config);
       closeSettingsModal();
-      fetchContents();
+      initLoad();
     }
 
-    // --- Utilities ---
+    // --- Helpers ---
     function showToast(msg, iconClass = 'fa-info-circle') {
       const toast = document.getElementById('toast');
       const toastMsg = document.getElementById('toast-msg');
