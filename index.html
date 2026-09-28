@@ -4,9 +4,7 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
   <title>microCMS Mobile Editor</title>
-  <!-- Tailwind CSS -->
   <script src="https://cdn.tailwindcss.com"></script>
-  <!-- FontAwesome Icons -->
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
   <style>
     body {
@@ -23,22 +21,21 @@
       -ms-overflow-style: none;
       scrollbar-width: none;
     }
-    /* モバイルでのズーム防止: input/textarea/select は最低16px (text-base) */
     input, textarea, select {
       font-size: 16px !important;
     }
-    /* Rich Text Preview HTML Styling */
     .html-preview-content {
       font-size: 14px;
       line-height: 1.6;
       color: #334155;
     }
-    .html-preview-content h1 { font-size: 1.4em; font-weight: bold; margin-bottom: 0.4em; }
-    .html-preview-content h2 { font-size: 1.25em; font-weight: bold; margin-bottom: 0.4em; }
-    .html-preview-content h3 { font-size: 1.1em; font-weight: bold; margin-bottom: 0.4em; }
+    .html-preview-content h1 { font-size: 1.35em; font-weight: bold; margin-bottom: 0.4em; }
+    .html-preview-content h2 { font-size: 1.2em; font-weight: bold; margin-bottom: 0.4em; border-bottom: 1px solid #e2e8f0; padding-bottom: 0.2em; }
+    .html-preview-content h3 { font-size: 1.1em; font-weight: bold; margin-bottom: 0.3em; }
     .html-preview-content p { margin-bottom: 0.6em; }
     .html-preview-content ul { list-style-type: disc; padding-left: 1.2em; margin-bottom: 0.6em; }
     .html-preview-content ol { list-style-type: decimal; padding-left: 1.2em; margin-bottom: 0.6em; }
+    .html-preview-content blockquote { border-left: 3px solid #cbd5e1; padding-left: 0.8em; color: #64748b; margin: 0.5em 0; }
     .html-preview-content img { max-width: 100%; height: auto; border-radius: 0.5rem; margin: 0.4em 0; }
     .html-preview-content a { color: #4f46e5; text-decoration: underline; }
   </style>
@@ -48,55 +45,77 @@
   <!-- Header -->
   <header class="bg-indigo-600 text-white px-4 py-3 flex items-center justify-between shadow-md z-10 flex-shrink-0">
     <div class="flex items-center space-x-2.5">
-      <i class="fa-solid fa-paper-plane text-lg"></i>
-      <h1 class="font-bold text-base tracking-wide">microCMS Mobile</h1>
+      <i class="fa-solid fa-cube text-lg"></i>
+      <h1 class="font-bold text-base tracking-wide" id="app-header-title">microCMS Editor</h1>
     </div>
-    <button id="btn-settings" class="p-2 rounded-full hover:bg-indigo-700 transition active:scale-95 text-indigo-100">
-      <i class="fa-solid fa-gear text-base"></i>
-    </button>
+    <div class="flex items-center gap-1.5">
+      <button id="btn-refresh" onclick="fetchContents()" class="p-2 rounded-full hover:bg-indigo-700 transition active:scale-95 text-indigo-100">
+        <i class="fa-solid fa-rotate-right text-base"></i>
+      </button>
+      <button id="btn-settings" class="p-2 rounded-full hover:bg-indigo-700 transition active:scale-95 text-indigo-100">
+        <i class="fa-solid fa-gear text-base"></i>
+      </button>
+    </div>
   </header>
 
-  <!-- Main Content Area -->
+  <!-- Main View -->
   <main class="flex-1 overflow-y-auto px-3.5 py-3 space-y-3 no-scrollbar" id="main-content">
-
-    <!-- Setup Banner -->
+    <!-- Unconfigured Setup Banner -->
     <div id="setup-banner" class="bg-white rounded-2xl p-5 shadow-sm border border-indigo-100 text-center space-y-3 my-auto max-w-md mx-auto">
       <div class="w-12 h-12 bg-indigo-50 rounded-xl flex items-center justify-center mx-auto text-indigo-600">
         <i class="fa-solid fa-sliders text-xl"></i>
       </div>
       <div class="space-y-1">
         <h2 class="font-bold text-slate-800 text-base">API接続設定が必要です</h2>
-        <p class="text-xs text-slate-500 leading-relaxed">右上の設定ボタンから サービスDomain、API Key、エンドポイント名を入力してください。</p>
+        <p class="text-xs text-slate-500 leading-relaxed">右上の設定ボタンから サービスDomain、API Key、エンドポイント名、API形式を入力してください。</p>
       </div>
       <button onclick="openSettingsModal()" class="w-full bg-indigo-600 hover:bg-indigo-700 text-white font-bold py-2.5 rounded-xl text-sm shadow-md active:scale-98 transition">
         設定を開く
       </button>
     </div>
 
-    <!-- Content List Container -->
+    <!-- Content Container -->
     <div id="content-container" class="hidden space-y-3 max-w-2xl mx-auto">
-      <!-- Search & Create Header -->
-      <div class="flex items-center justify-between gap-2.5">
-        <div class="relative flex-1">
-          <i class="fa-solid fa-magnifying-glass absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-400 text-xs"></i>
-          <input type="text" id="search-input" placeholder="検索..." class="w-full pl-9 pr-3 py-2 bg-white rounded-xl border border-slate-200 focus:outline-none focus:ring-2 focus:ring-indigo-500 shadow-sm text-sm">
+      
+      <!-- List API Header Controller (リスト形式の場合のみ表示) -->
+      <div id="list-controls" class="space-y-2">
+        <div class="flex items-center justify-between gap-2.5">
+          <div class="relative flex-1">
+            <i class="fa-solid fa-magnifying-glass absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-400 text-xs"></i>
+            <input type="text" id="search-input" placeholder="タイトルやIDで検索..." class="w-full pl-9 pr-3 py-2 bg-white rounded-xl border border-slate-200 focus:outline-none focus:ring-2 focus:ring-indigo-500 shadow-sm text-sm">
+          </div>
+          <button id="btn-create" class="bg-indigo-600 hover:bg-indigo-700 text-white px-4 py-2 rounded-xl font-bold flex items-center gap-1.5 shadow-md active:scale-95 transition whitespace-nowrap text-sm">
+            <i class="fa-solid fa-plus text-xs"></i>
+            <span>新規</span>
+          </button>
         </div>
-        <button id="btn-create" class="bg-indigo-600 hover:bg-indigo-700 text-white px-4 py-2 rounded-xl font-bold flex items-center gap-1.5 shadow-md active:scale-95 transition whitespace-nowrap text-sm">
-          <i class="fa-solid fa-plus text-xs"></i>
-          <span>新規</span>
+        <!-- Status Filter Buttons -->
+        <div class="flex gap-1.5 text-xs overflow-x-auto no-scrollbar py-0.5" id="status-filters">
+          <button onclick="setStatusFilter('ALL')" class="status-tab-btn px-3 py-1 rounded-lg font-medium bg-indigo-600 text-white shadow-sm" data-status="ALL">すべて</button>
+          <button onclick="setStatusFilter('PUBLISHED')" class="status-tab-btn px-3 py-1 rounded-lg font-medium bg-white text-slate-600 border border-slate-200" data-status="PUBLISHED">公開中</button>
+          <button onclick="setStatusFilter('DRAFT')" class="status-tab-btn px-3 py-1 rounded-lg font-medium bg-white text-slate-600 border border-slate-200" data-status="DRAFT">下書き</button>
+        </div>
+      </div>
+
+      <!-- Object API Header Card (オブジェクト形式の場合に表示) -->
+      <div id="object-controls" class="hidden bg-white p-4 rounded-2xl border border-indigo-100 shadow-sm flex items-center justify-between">
+        <div>
+          <span class="text-[10px] font-bold uppercase tracking-wider text-indigo-600 bg-indigo-50 px-2 py-0.5 rounded-md">単一オブジェクト形式</span>
+          <h2 class="font-bold text-slate-800 text-sm mt-1" id="object-endpoint-title">設定項目</h2>
+        </div>
+        <button onclick="openEditorModal(singleObjectData)" class="bg-indigo-600 hover:bg-indigo-700 text-white px-4 py-2 rounded-xl font-bold flex items-center gap-1.5 text-xs shadow-md active:scale-95 transition">
+          <i class="fa-solid fa-pen-to-square"></i>
+          <span>編集する</span>
         </button>
       </div>
 
-      <!-- Item Cards List -->
-      <div id="items-list" class="space-y-2.5 pb-16">
-        <!-- JS-driven content -->
-      </div>
+      <!-- Item List Container -->
+      <div id="items-list" class="space-y-2.5 pb-16"></div>
     </div>
-
   </main>
 
   <!-- Settings Modal -->
-  <div id="modal-settings" class="fixed inset-0 bg-slate-900/60 backdrop-blur-sm z-50 flex items-end sm:items-center justify-center hidden transition-opacity">
+  <div id="modal-settings" class="fixed inset-0 bg-slate-900/60 backdrop-blur-sm z-50 flex items-end sm:items-center justify-center hidden">
     <div class="bg-white w-full sm:max-w-md rounded-t-2xl sm:rounded-2xl p-5 shadow-2xl space-y-4 max-h-[90vh] overflow-y-auto">
       <div class="flex items-center justify-between border-b pb-3">
         <h2 class="font-bold text-slate-800 text-base">microCMS 接続設定</h2>
@@ -104,7 +123,6 @@
           <i class="fa-solid fa-xmark text-lg"></i>
         </button>
       </div>
-
       <div class="space-y-3 text-sm">
         <div class="space-y-1">
           <label class="block font-medium text-slate-700 text-xs">サービス Domain</label>
@@ -113,33 +131,35 @@
             <span class="text-slate-400 text-xs ml-1 flex-shrink-0">.microcms.io</span>
           </div>
         </div>
-
         <div class="space-y-1">
           <label class="block font-medium text-slate-700 text-xs">API Key</label>
-          <input type="password" id="cfg-apikey" placeholder="xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx" class="w-full border border-slate-300 rounded-xl px-3 py-2 focus:outline-none focus:ring-2 focus:ring-indigo-500">
+          <input type="password" id="cfg-apikey" placeholder="X-MICROCMS-API-KEY" class="w-full border border-slate-300 rounded-xl px-3 py-2 focus:outline-none focus:ring-2 focus:ring-indigo-500">
         </div>
-
-        <div class="space-y-1">
-          <label class="block font-medium text-slate-700 text-xs">メイン エンドポイント (API ID)</label>
-          <input type="text" id="cfg-endpoint" placeholder="blogs や news など" class="w-full border border-slate-300 rounded-xl px-3 py-2 focus:outline-none focus:ring-2 focus:ring-indigo-500">
+        <div class="grid grid-cols-2 gap-2">
+          <div class="space-y-1">
+            <label class="block font-medium text-slate-700 text-xs">メイン エンドポイント</label>
+            <input type="text" id="cfg-endpoint" placeholder="blogs や config など" class="w-full border border-slate-300 rounded-xl px-3 py-2 focus:outline-none focus:ring-2 focus:ring-indigo-500">
+          </div>
+          <div class="space-y-1">
+            <label class="block font-medium text-slate-700 text-xs">API 形式</label>
+            <select id="cfg-apitype" class="w-full border border-slate-300 rounded-xl px-3 py-2 bg-white focus:outline-none focus:ring-2 focus:ring-indigo-500">
+              <option value="list">リスト形式 (配列)</option>
+              <option value="object">オブジェクト形式 (単一)</option>
+            </select>
+          </div>
         </div>
-
         <div class="space-y-1">
           <label class="block font-medium text-slate-700 text-xs">タイトル表示用キー (任意)</label>
-          <input type="text" id="cfg-title-field" placeholder="例: question, title, name (空欄で自動判定)" class="w-full border border-slate-300 rounded-xl px-3 py-2 focus:outline-none focus:ring-2 focus:ring-indigo-500">
-          <p class="text-[10px] text-slate-400">一覧のタイトルとして優先表示するフィールド名。</p>
+          <input type="text" id="cfg-title-field" placeholder="title, name, question など" class="w-full border border-slate-300 rounded-xl px-3 py-2 focus:outline-none focus:ring-2 focus:ring-indigo-500">
         </div>
-
         <div class="space-y-1">
-          <label class="block font-medium text-slate-700 text-xs">参照先カテゴリ/タグ エンドポイント (任意)</label>
-          <input type="text" id="cfg-ref-endpoint" placeholder="categories (省略時も自動検知)" class="w-full border border-slate-300 rounded-xl px-3 py-2 focus:outline-none focus:ring-2 focus:ring-indigo-500">
-          <p class="text-[10px] text-slate-400">カテゴリ等のプルダウン選択肢を取得します。</p>
+          <label class="block font-medium text-slate-700 text-xs">参照先エンドポイント (任意)</label>
+          <input type="text" id="cfg-ref-endpoint" placeholder="categories (複数指定はカンマ区切り)" class="w-full border border-slate-300 rounded-xl px-3 py-2 focus:outline-none focus:ring-2 focus:ring-indigo-500">
         </div>
       </div>
-
       <div class="pt-2">
         <button onclick="saveSettings()" class="w-full bg-indigo-600 hover:bg-indigo-700 text-white font-bold py-3 rounded-xl shadow-md active:scale-98 transition text-sm">
-          設定を保存して取得
+          設定を保存して更新
         </button>
       </div>
     </div>
@@ -147,12 +167,11 @@
 
   <!-- Editor Modal -->
   <div id="modal-editor" class="fixed inset-0 bg-slate-900/60 backdrop-blur-sm z-50 flex items-end sm:items-center justify-center hidden">
-    <div class="bg-white w-full sm:max-w-xl rounded-t-2xl sm:rounded-2xl p-4 sm:p-5 shadow-2xl flex flex-col h-[92vh] sm:h-[86vh]">
-      
-      <!-- Editor Header -->
+    <div class="bg-white w-full sm:max-w-2xl rounded-t-2xl sm:rounded-2xl p-4 sm:p-5 shadow-2xl flex flex-col h-[94vh] sm:h-[88vh]">
+      <!-- Header -->
       <div class="flex items-center justify-between border-b pb-3 flex-shrink-0">
         <div class="flex items-center space-x-2">
-          <span id="editor-title" class="font-bold text-slate-800 text-base">記事の編集</span>
+          <span id="editor-title" class="font-bold text-slate-800 text-base">編集</span>
           <span id="editor-status-badge" class="px-2 py-0.5 text-[10px] rounded-full font-bold bg-slate-100 text-slate-600">NEW</span>
         </div>
         <button onclick="closeEditorModal()" class="text-slate-400 hover:text-slate-600 p-1 -mr-1">
@@ -160,18 +179,23 @@
         </button>
       </div>
 
-      <!-- Dynamic Form Fields -->
-      <div id="editor-fields" class="flex-1 overflow-y-auto py-3.5 space-y-4 no-scrollbar">
-        <!-- JS-driven inputs -->
+      <!-- Fields Container -->
+      <div id="editor-fields" class="flex-1 overflow-y-auto py-3.5 space-y-4 no-scrollbar"></div>
+
+      <!-- Add Dynamic Field (新規作成時に追加できるボタン) -->
+      <div class="pt-1 pb-2 flex-shrink-0 border-t border-slate-100 flex items-center justify-between">
+        <button type="button" onclick="promptAddNewField()" class="text-xs text-indigo-600 hover:text-indigo-800 font-bold flex items-center gap-1 py-1">
+          <i class="fa-solid fa-plus"></i> フィールドを追加
+        </button>
+        <span class="text-[10px] text-slate-400">スキーマ推論により入力枠が生成されています</span>
       </div>
 
-      <!-- Editor Footer Actions -->
+      <!-- Footer Buttons -->
       <div class="border-t pt-3 flex items-center justify-between gap-2.5 flex-shrink-0 safe-bottom">
         <button id="btn-delete" onclick="deleteContent()" class="text-rose-600 bg-rose-50 hover:bg-rose-100 px-3.5 py-2.5 rounded-xl font-bold flex items-center gap-1 active:scale-95 transition text-xs">
           <i class="fa-solid fa-trash-can"></i>
           <span>削除</span>
         </button>
-
         <div class="flex items-center gap-2 flex-1 justify-end">
           <button onclick="saveContent(true)" class="bg-slate-100 hover:bg-slate-200 text-slate-700 font-bold px-3.5 py-2.5 rounded-xl text-xs active:scale-95 transition">
             下書き保存
@@ -181,19 +205,21 @@
           </button>
         </div>
       </div>
-
     </div>
   </div>
 
-  <!-- Notification Toast -->
+  <!-- Toast Notification -->
   <div id="toast" class="fixed bottom-6 left-1/2 -translate-x-1/2 bg-slate-900/95 backdrop-blur-md text-white text-xs px-4 py-2.5 rounded-full shadow-2xl transition-all duration-300 opacity-0 pointer-events-none z-50 flex items-center gap-2 max-w-[90vw]">
     <i id="toast-icon" class="fa-solid fa-circle-info text-indigo-400"></i>
-    <span id="toast-msg" class="truncate">メッセージ</span>
+    <span id="toast-msg" class="truncate">通知メッセージ</span>
   </div>
 
+  <!-- Hidden File Input for Media Upload -->
+  <input type="file" id="media-uploader-input" class="hidden" accept="image/*">
+
   <script>
-    // --- IndexedDB DB Manager ---
-    const DB_NAME = 'MicroCMSMobileDB';
+    // --- IndexedDB & Local Storage Manager ---
+    const DB_NAME = 'MicroCMSMobileDB_v2';
     const STORE_NAME = 'configStore';
 
     function initDB() {
@@ -217,13 +243,7 @@
           const tx = db.transaction(STORE_NAME, 'readonly');
           const store = tx.objectStore(STORE_NAME);
           const req = store.get('mc_config');
-          req.onsuccess = () => {
-            if (req.result) {
-              resolve(req.result);
-            } else {
-              resolve(getLocalStorageConfig());
-            }
-          };
+          req.onsuccess = () => resolve(req.result || getLocalStorageConfig());
           req.onerror = () => resolve(getLocalStorageConfig());
         });
       } catch (e) {
@@ -236,8 +256,10 @@
         domain: localStorage.getItem('mc_domain') || '',
         apiKey: localStorage.getItem('mc_apikey') || '',
         endpoint: localStorage.getItem('mc_endpoint') || '',
+        apiType: localStorage.getItem('mc_api_type') || 'list',
         titleField: localStorage.getItem('mc_title_field') || '',
-        refEndpoint: localStorage.getItem('mc_ref_endpoint') || ''
+        refEndpoint: localStorage.getItem('mc_ref_endpoint') || '',
+        schemaCache: JSON.parse(localStorage.getItem('mc_schema_cache') || '{}')
       };
     }
 
@@ -245,39 +267,52 @@
       localStorage.setItem('mc_domain', cfg.domain);
       localStorage.setItem('mc_apikey', cfg.apiKey);
       localStorage.setItem('mc_endpoint', cfg.endpoint);
+      localStorage.setItem('mc_api_type', cfg.apiType || 'list');
       localStorage.setItem('mc_title_field', cfg.titleField || '');
       localStorage.setItem('mc_ref_endpoint', cfg.refEndpoint || '');
-
+      localStorage.setItem('mc_schema_cache', JSON.stringify(cfg.schemaCache || {}));
       try {
         const db = await initDB();
         const tx = db.transaction(STORE_NAME, 'readwrite');
-        const store = tx.objectStore(STORE_NAME);
-        store.put(cfg, 'mc_config');
+        tx.objectStore(STORE_NAME).put(cfg, 'mc_config');
       } catch (e) {
-        console.warn('IndexedDB save failed, fallback to localStorage', e);
+        console.warn('DB Save fallback to localStorage', e);
       }
     }
 
     // --- State Management ---
-    let config = { domain: '', apiKey: '', endpoint: '', titleField: '', refEndpoint: '' };
+    let config = {
+      domain: '',
+      apiKey: '',
+      endpoint: '',
+      apiType: 'list', // 'list' or 'object'
+      titleField: '',
+      refEndpoint: '',
+      schemaCache: {}
+    };
+
     let itemsData = [];
+    let singleObjectData = null;
     let referenceCandidates = {};
     let currentEditingItem = null;
     let isCreating = false;
+    let currentStatusFilter = 'ALL';
+    let currentUploadTargetField = null; // 画像アップロード時の対象フィールド・エディタ
 
     // --- DOM Elements ---
     const setupBanner = document.getElementById('setup-banner');
     const contentContainer = document.getElementById('content-container');
+    const listControls = document.getElementById('list-controls');
+    const objectControls = document.getElementById('object-controls');
     const itemsList = document.getElementById('items-list');
     const searchInput = document.getElementById('search-input');
-
     const modalSettings = document.getElementById('modal-settings');
     const modalEditor = document.getElementById('modal-editor');
+    const mediaUploaderInput = document.getElementById('media-uploader-input');
 
-    // --- Core Initializer ---
+    // --- Initializer ---
     window.onload = async () => {
       config = await getStoredConfig();
-
       if (config.domain && config.apiKey && config.endpoint) {
         fetchContents();
       } else {
@@ -285,33 +320,47 @@
       }
 
       document.getElementById('btn-settings').addEventListener('click', openSettingsModal);
-      document.getElementById('btn-create').addEventListener('click', () => openEditorModal());
-      searchInput.addEventListener('input', filterItems);
+      document.getElementById('btn-create').addEventListener('click', () => openEditorModal(null));
+      searchInput.addEventListener('input', () => renderList(filterItemsData()));
+      mediaUploaderInput.addEventListener('change', handleFileSelected);
     };
 
-    // --- MicroCMS API Handler ---
+    // --- API Handlers ---
     async function fetchContents() {
       if (!config.domain || !config.apiKey || !config.endpoint) return;
-
-      showToast('データを取得中...', 'fa-spinner fa-spin');
+      showToast('データ取得中...', 'fa-spinner fa-spin');
+      
+      const isObject = config.apiType === 'object';
+      const url = `https://${config.domain}.microcms.io/api/v1/${config.endpoint}${isObject ? '?draftKey=1' : '?draftKey=1&limit=50'}`;
 
       try {
-        const url = `https://${config.domain}.microcms.io/api/v1/${config.endpoint}?draftKey=1&limit=50`;
         const res = await fetch(url, {
           headers: { 'X-MICROCMS-API-KEY': config.apiKey }
         });
-
         if (!res.ok) throw new Error(`エラー (${res.status})`);
-
         const data = await res.json();
-        itemsData = data.contents || [];
-
-        fetchReferenceCandidates();
 
         setupBanner.classList.add('hidden');
         contentContainer.classList.remove('hidden');
 
-        renderList(itemsData);
+        if (isObject) {
+          singleObjectData = data;
+          itemsData = [];
+          listControls.classList.add('hidden');
+          objectControls.classList.remove('hidden');
+          document.getElementById('object-endpoint-title').textContent = `${config.endpoint} (単一レコード)`;
+          updateInferredSchema([data]);
+          renderSingleObjectPreview(data);
+        } else {
+          itemsData = data.contents || [];
+          singleObjectData = null;
+          listControls.classList.remove('hidden');
+          objectControls.classList.add('hidden');
+          updateInferredSchema(itemsData);
+          renderList(filterItemsData());
+        }
+
+        fetchReferenceCandidates();
         showToast('取得が完了しました', 'fa-check text-emerald-400');
       } catch (err) {
         console.error(err);
@@ -319,77 +368,181 @@
       }
     }
 
-    // 参照項目のプルダウン用選択肢を取得する
-    async function fetchReferenceCandidates(fieldName = 'category') {
-      const endpointToFetch = config.refEndpoint || `${fieldName}s`;
-      if (referenceCandidates[fieldName]) return;
+    // 参照プルダウンの取得
+    async function fetchReferenceCandidates(fieldName = '') {
+      const endpoints = config.refEndpoint
+        ? config.refEndpoint.split(',').map(s => s.trim())
+        : (fieldName ? [`${fieldName}s`] : ['categories']);
+
+      for (const ep of endpoints) {
+        if (!ep || referenceCandidates[ep]) continue;
+        try {
+          const url = `https://${config.domain}.microcms.io/api/v1/${ep}?limit=100`;
+          const res = await fetch(url, {
+            headers: { 'X-MICROCMS-API-KEY': config.apiKey }
+          });
+          if (res.ok) {
+            const data = await res.json();
+            referenceCandidates[ep] = data.contents || [];
+          }
+        } catch (e) {
+          console.warn(`Failed to fetch ref endpoint ${ep}:`, e);
+        }
+      }
+    }
+
+    // 画像アップロードAPI (POST /api/v1/media)
+    async function uploadMediaFile(file) {
+      if (!file) return null;
+      showToast('画像をアップロード中...', 'fa-spinner fa-spin');
+      const formData = new FormData();
+      formData.append('files', file);
 
       try {
-        const url = `https://${config.domain}.microcms.io/api/v1/${endpointToFetch}?limit=100`;
-        const res = await fetch(url, {
-          headers: { 'X-MICROCMS-API-KEY': config.apiKey }
+        const res = await fetch(`https://${config.domain}.microcms.io/api/v1/media`, {
+          method: 'POST',
+          headers: {
+            'X-MICROCMS-API-KEY': config.apiKey
+          },
+          body: formData
         });
-
-        if (res.ok) {
-          const data = await res.json();
-          referenceCandidates[fieldName] = data.contents || [];
-        }
-      } catch (e) {
-        console.warn('Failed to fetch reference options:', e);
+        if (!res.ok) throw new Error(`アップロード失敗 (${res.status})`);
+        const data = await res.json();
+        showToast('アップロード完了', 'fa-check text-emerald-400');
+        return data.url;
+      } catch (err) {
+        console.error(err);
+        showToast(`画像送信エラー: ${err.message}`, 'fa-triangle-exclamation text-rose-400');
+        return null;
       }
     }
 
-    // 人間に読みやすいタイトルを抽出するヘルパー（設定されたフィールドを最優先）
+    // --- Schema Inference Engine (型推論 & 新規入力枠生成) ---
+    function detectType(key, val) {
+      if (['id', 'createdAt', 'updatedAt', 'publishedAt', 'revisedAt', 'closedAt'].includes(key)) return 'system';
+      if (typeof val === 'boolean') return 'boolean';
+      if (typeof val === 'number') return 'number';
+      if (typeof val === 'object' && val !== null) {
+        if (val.url) return 'media';
+        if (val.id) return 'relation';
+        if (Array.isArray(val)) return 'array';
+        return 'object';
+      }
+      if (typeof val === 'string') {
+        if (/^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}/.test(val)) return 'datetime';
+        if (key.toLowerCase().includes('content') || key.toLowerCase().includes('body') || /<[a-z][\s\S]*>/i.test(val)) {
+          return 'richEditor';
+        }
+        if (val.length > 60 || val.includes('\n')) return 'textarea';
+        return 'text';
+      }
+      return 'text';
+    }
+
+    function updateInferredSchema(records) {
+      if (!config.schemaCache) config.schemaCache = {};
+      const endpointSchema = config.schemaCache[config.endpoint] || {};
+
+      records.forEach(rec => {
+        Object.entries(rec).forEach(([k, v]) => {
+          if (['createdAt', 'updatedAt', 'publishedAt', 'revisedAt', 'closedAt'].includes(k)) return;
+          const currentType = detectType(k, v);
+          if (!endpointSchema[k] || endpointSchema[k] === 'text') {
+            endpointSchema[k] = currentType;
+          }
+        });
+      });
+
+      // 最低限のデフォルト枠
+      if (Object.keys(endpointSchema).length === 0) {
+        endpointSchema['title'] = 'text';
+        endpointSchema['content'] = 'richEditor';
+      }
+
+      config.schemaCache[config.endpoint] = endpointSchema;
+      saveStoredConfig(config);
+    }
+
+    // --- Content Helpers ---
     function getItemTitle(item) {
       if (!item) return '無題';
-
-      // 1. 設定画面でユーザーが指定したフィールドを最優先
       if (config.titleField && item[config.titleField]) {
-        const customVal = item[config.titleField];
-        if (typeof customVal === 'string' && customVal.trim()) {
-          return customVal.replace(/<[^>]*>?/gm, '').trim();
-        }
+        return String(item[config.titleField]).replace(/<[^>]*>?/gm, '').trim();
       }
-
-      // 2. 自動判定のフォールバック一覧
-      if (item.title) return item.title;
-      if (item.name) return item.name;
-      if (item.question) return item.question;
-      if (item.subject) return item.subject;
-
-      // 3. 本文の先頭から抽出
-      let text = item.content || item.body || item.description || '';
-      if (typeof text === 'string' && text.length > 0) {
-        const clean = text.replace(/<[^>]*>?/gm, '').trim();
-        if (clean.length > 0) return clean.substring(0, 35);
-      }
-
-      return item.id || '無題';
+      return item.title || item.name || item.question || item.subject || item.id || '（タイトルなし）';
     }
 
-    // 関連レコードのラベル表現ヘルパー
+    function getItemStatus(item) {
+      if (!item) return 'DRAFT';
+      if (item.closedAt && new Date(item.closedAt) <= new Date()) return 'CLOSED';
+      if (item.publishedAt) return 'PUBLISHED';
+      return 'DRAFT';
+    }
+
     function formatRelationValue(val) {
-      if (val === null || val === undefined) return '';
-
-      if (Array.isArray(val)) {
-        if (val.length === 0) return '（未選択）';
-        return val.map(v => formatRelationValue(v)).join(', ');
-      }
-
-      if (typeof val === 'object') {
-        if (val.name) return val.name;
-        if (val.title) return val.title;
-        if (val.id) return val.id;
-        return JSON.stringify(val);
-      }
-
+      if (!val) return '';
+      if (Array.isArray(val)) return val.map(formatRelationValue).join(', ');
+      if (typeof val === 'object') return val.title || val.name || val.id || JSON.stringify(val);
       return String(val);
     }
 
-    // --- UI Rendering ---
+    // --- UI Renderers ---
+    function renderSingleObjectPreview(data) {
+      itemsList.innerHTML = '';
+      const card = document.createElement('div');
+      card.className = 'bg-white rounded-2xl p-4 shadow-sm border border-slate-200/80 space-y-3';
+      
+      const updatedAt = new Date(data.updatedAt || Date.now()).toLocaleString('ja-JP');
+      let fieldsHtml = '';
+      Object.entries(data).forEach(([k, v]) => {
+        if (['createdAt', 'updatedAt', 'publishedAt', 'revisedAt'].includes(k)) return;
+        const valStr = typeof v === 'object' ? JSON.stringify(v) : String(v);
+        fieldsHtml += `
+          <div class="text-xs border-b border-slate-100 pb-1.5 pt-1">
+            <span class="font-bold text-slate-500">${k}:</span>
+            <span class="text-slate-800 ml-1 break-all">${escapeHtml(valStr.substring(0, 100))}</span>
+          </div>
+        `;
+      });
+
+      card.innerHTML = `
+        <div class="flex items-center justify-between">
+          <span class="font-bold text-slate-800 text-sm">現在の設定値</span>
+          <span class="text-[10px] text-slate-400"><i class="fa-regular fa-clock mr-1"></i>${updatedAt}</span>
+        </div>
+        <div class="bg-slate-50 p-3 rounded-xl max-h-80 overflow-y-auto space-y-1">
+          ${fieldsHtml || '<p class="text-xs text-slate-400">データがありません</p>'}
+        </div>
+      `;
+      itemsList.appendChild(card);
+    }
+
+    function setStatusFilter(status) {
+      currentStatusFilter = status;
+      document.querySelectorAll('.status-tab-btn').forEach(btn => {
+        if (btn.dataset.status === status) {
+          btn.className = 'status-tab-btn px-3 py-1 rounded-lg font-medium bg-indigo-600 text-white shadow-sm';
+        } else {
+          btn.className = 'status-tab-btn px-3 py-1 rounded-lg font-medium bg-white text-slate-600 border border-slate-200';
+        }
+      });
+      renderList(filterItemsData());
+    }
+
+    function filterItemsData() {
+      const q = searchInput.value.toLowerCase().trim();
+      return itemsData.filter(item => {
+        const status = getItemStatus(item);
+        if (currentStatusFilter !== 'ALL' && status !== currentStatusFilter) return false;
+        if (!q) return true;
+        const title = getItemTitle(item).toLowerCase();
+        const id = (item.id || '').toLowerCase();
+        return title.includes(q) || id.includes(q);
+      });
+    }
+
     function renderList(list) {
       itemsList.innerHTML = '';
-
       if (list.length === 0) {
         itemsList.innerHTML = `
           <div class="text-center py-12 text-slate-400 bg-white rounded-2xl border border-slate-200/60 p-5">
@@ -401,93 +554,54 @@
       }
 
       list.forEach(item => {
-        const displayTitle = getItemTitle(item);
+        const title = getItemTitle(item);
+        const status = getItemStatus(item);
         const updatedAt = new Date(item.updatedAt || Date.now()).toLocaleDateString('ja-JP', {
           month: 'numeric', day: 'numeric', hour: '2-digit', minute: '2-digit'
         });
 
-        let previewText = item.content || item.body || item.description || '';
-        if (typeof previewText === 'object') {
-          previewText = formatRelationValue(previewText);
-        } else {
-          previewText = previewText.replace(/<[^>]*>?/gm, '').substring(0, 60);
-        }
-
-        // 関連フィールド（Categoryなど）バッジ表示
-        const relationBadges = [];
-        Object.keys(item).forEach(k => {
-          if (['id', 'title', 'name', 'content', 'body', 'createdAt', 'updatedAt', 'publishedAt', 'revisedAt'].includes(k)) return;
-          const v = item[k];
-          if (typeof v === 'object' && v !== null && !v.url) {
-            const label = formatRelationValue(v);
-            if (label && label !== '（未選択）') {
-              relationBadges.push({ key: k, value: label });
-            }
-          }
-        });
+        const statusBadge = status === 'PUBLISHED'
+          ? '<span class="text-[9px] bg-emerald-50 text-emerald-600 border border-emerald-200 px-1.5 py-0.5 rounded font-bold">公開中</span>'
+          : '<span class="text-[9px] bg-amber-50 text-amber-600 border border-amber-200 px-1.5 py-0.5 rounded font-bold">下書き</span>';
 
         const card = document.createElement('div');
-        card.className = 'bg-white rounded-2xl p-3.5 shadow-sm border border-slate-200/80 active:scale-98 transition cursor-pointer relative space-y-2 hover:border-indigo-200';
+        card.className = 'bg-white rounded-2xl p-3.5 shadow-sm border border-slate-200/80 active:scale-98 transition cursor-pointer space-y-2 hover:border-indigo-200';
         card.onclick = () => openEditorModal(item);
-
         card.innerHTML = `
           <div class="flex items-center justify-between gap-2">
-            <h3 class="font-bold text-slate-800 text-sm sm:text-base line-clamp-1 flex-1 leading-tight">${escapeHtml(displayTitle)}</h3>
-            <span class="text-[10px] bg-slate-100 text-slate-500 px-2 py-0.5 rounded-md font-mono flex-shrink-0">
-              ${escapeHtml(item.id)}
-            </span>
-          </div>
-
-          ${previewText && previewText !== displayTitle ? `<p class="text-xs text-slate-500 line-clamp-1 leading-normal">${escapeHtml(previewText)}</p>` : ''}
-
-          <div class="flex items-center justify-between pt-1">
-            <div class="flex flex-wrap gap-1">
-              ${relationBadges.map(b => `
-                <span class="text-[10px] bg-indigo-50 text-indigo-700 px-2 py-0.5 rounded-md font-medium inline-flex items-center gap-1 border border-indigo-100">
-                  <span class="text-indigo-400 font-normal">${escapeHtml(b.key)}:</span>
-                  <span class="truncate max-w-[120px]">${escapeHtml(b.value)}</span>
-                </span>
-              `).join('')}
+            <h3 class="font-bold text-slate-800 text-sm sm:text-base line-clamp-1 flex-1">${escapeHtml(title)}</h3>
+            <div class="flex items-center gap-1.5 flex-shrink-0">
+              ${statusBadge}
+              <span class="text-[10px] bg-slate-100 text-slate-500 px-1.5 py-0.5 rounded font-mono">${escapeHtml(item.id || '')}</span>
             </div>
-            <span class="text-[10px] text-slate-400 flex items-center gap-1 ml-auto flex-shrink-0">
-              <i class="fa-regular fa-clock"></i>${updatedAt}
-            </span>
+          </div>
+          <div class="flex items-center justify-between pt-1 text-[10px] text-slate-400">
+            <span>ID: ${escapeHtml(item.id || '')}</span>
+            <span><i class="fa-regular fa-clock mr-1"></i>${updatedAt}</span>
           </div>
         `;
-
         itemsList.appendChild(card);
       });
     }
 
-    function filterItems() {
-      const q = searchInput.value.toLowerCase().trim();
-      if (!q) {
-        renderList(itemsData);
-        return;
-      }
-
-      const filtered = itemsData.filter(item => {
-        const title = getItemTitle(item).toLowerCase();
-        const id = item.id.toLowerCase();
-        return title.includes(q) || id.includes(q);
-      });
-
-      renderList(filtered);
-    }
-
-    // --- Dynamic Editor Form Generator ---
+    // --- Dynamic Editor Modal & Fields Generator ---
     async function openEditorModal(item = null) {
       currentEditingItem = item;
       isCreating = !item;
+      const isObject = config.apiType === 'object';
 
       const titleEl = document.getElementById('editor-title');
       const badgeEl = document.getElementById('editor-status-badge');
       const deleteBtn = document.getElementById('btn-delete');
       const fieldsContainer = document.getElementById('editor-fields');
-
       fieldsContainer.innerHTML = '';
 
-      if (isCreating) {
+      if (isObject) {
+        titleEl.textContent = `${config.endpoint} を編集`;
+        badgeEl.textContent = 'OBJECT';
+        badgeEl.className = 'px-2 py-0.5 text-[10px] rounded-full font-bold bg-purple-100 text-purple-700';
+        deleteBtn.classList.add('hidden');
+      } else if (isCreating) {
         titleEl.textContent = '新規コンテンツ';
         badgeEl.textContent = '新規';
         badgeEl.className = 'px-2 py-0.5 text-[10px] rounded-full font-bold bg-emerald-100 text-emerald-700';
@@ -499,175 +613,264 @@
         deleteBtn.classList.remove('hidden');
       }
 
-      const sampleObj = item || (itemsData.length > 0 ? itemsData[0] : { title: '', content: '' });
-      const ignoreKeys = ['createdAt', 'updatedAt', 'publishedAt', 'revisedAt'];
+      // スキーマ定義またはキャッシュからのフィールド一覧抽出
+      const endpointSchema = (config.schemaCache && config.schemaCache[config.endpoint]) || {};
+      const targetObj = item || {};
+      const allKeys = Array.from(new Set([...Object.keys(endpointSchema), ...Object.keys(targetObj)]));
 
-      for (const key of Object.keys(sampleObj)) {
-        if (ignoreKeys.includes(key)) continue;
+      // リスト形式の新規作成時のみ、カスタムIDフィールドを先頭に追加
+      if (!isObject && isCreating) {
+        appendFieldInput(fieldsContainer, 'id', 'text', '', 'カスタムID（空欄で自動採番）');
+      }
 
-        const val = item ? item[key] : '';
-        const fieldGroup = document.createElement('div');
-        fieldGroup.className = 'space-y-1.5 bg-slate-50 p-3 rounded-xl border border-slate-200/70';
+      for (const key of allKeys) {
+        if (['id', 'createdAt', 'updatedAt', 'publishedAt', 'revisedAt', 'closedAt'].includes(key)) continue;
+        const val = targetObj[key] !== undefined ? targetObj[key] : '';
+        const detectedType = endpointSchema[key] || detectType(key, val);
+        await appendFieldInput(fieldsContainer, key, detectedType, val);
+      }
 
-        const label = document.createElement('label');
-        label.className = 'block font-bold text-slate-700 text-xs tracking-wider uppercase flex items-center justify-between';
-        label.innerHTML = `<span>${key}</span>`;
+      modalEditor.classList.remove('hidden');
+    }
 
-        // 1. ID Field
-        if (key === 'id') {
-          if (!isCreating) continue;
-          const input = document.createElement('input');
-          input.type = 'text';
-          input.name = key;
-          input.placeholder = 'カスタムID（空欄で自動生成）';
-          input.className = 'w-full border border-slate-300 rounded-xl px-3 py-2 bg-white focus:outline-none focus:ring-2 focus:ring-indigo-500 text-sm';
-          fieldGroup.appendChild(label);
-          fieldGroup.appendChild(input);
-          fieldsContainer.appendChild(fieldGroup);
-          continue;
+    async function appendFieldInput(container, key, type, val, placeholder = '') {
+      const fieldGroup = document.createElement('div');
+      fieldGroup.className = 'space-y-1.5 bg-slate-50 p-3 rounded-xl border border-slate-200/70 field-group';
+      fieldGroup.dataset.fieldName = key;
+      fieldGroup.dataset.fieldType = type;
+
+      const label = document.createElement('label');
+      label.className = 'block font-bold text-slate-700 text-xs tracking-wider uppercase flex items-center justify-between';
+      label.innerHTML = `<span>${key}</span><span class="text-[10px] text-slate-400 font-normal">${type}</span>`;
+      fieldGroup.appendChild(label);
+
+      switch (type) {
+        case 'boolean': {
+          const wrap = document.createElement('div');
+          wrap.className = 'flex items-center space-x-2 pt-1';
+          wrap.innerHTML = `
+            <input type="checkbox" name="${key}" ${val ? 'checked' : ''} class="w-5 h-5 text-indigo-600 rounded border-slate-300">
+            <span class="text-xs text-slate-700">有効 (true)</span>
+          `;
+          fieldGroup.appendChild(wrap);
+          break;
         }
-
-        // 2. Boolean Field
-        if (typeof val === 'boolean') {
-          const checkWrap = document.createElement('div');
-          checkWrap.className = 'flex items-center space-x-2 pt-0.5';
+        case 'number': {
           const input = document.createElement('input');
-          input.type = 'checkbox';
+          input.type = 'number';
           input.name = key;
-          input.checked = !!val;
-          input.className = 'w-5 h-5 text-indigo-600 rounded border-slate-300 focus:ring-indigo-500';
-          checkWrap.appendChild(input);
-          checkWrap.appendChild(document.createElement('span')).textContent = '有効 (True)';
-          checkWrap.lastChild.className = 'text-xs text-slate-700 font-medium';
-          fieldGroup.appendChild(label);
-          fieldGroup.appendChild(checkWrap);
-        } 
-        // 3. Image Object Field
-        else if (typeof val === 'object' && val !== null && !Array.isArray(val) && val.url) {
-          label.innerHTML += `<span class="text-[10px] text-indigo-600 font-normal">画像 URL</span>`;
-          const input = document.createElement('input');
-          input.type = 'url';
-          input.name = `${key}.url`;
-          input.value = val.url || '';
-          input.placeholder = 'https://images.microcms-assets.io/...';
-          input.className = 'w-full border border-slate-300 rounded-xl px-3 py-2 bg-white focus:outline-none focus:ring-2 focus:ring-indigo-500 text-sm';
-          
-          fieldGroup.appendChild(label);
+          input.value = val !== undefined && val !== null ? val : '';
+          input.placeholder = placeholder || key;
+          input.className = 'w-full border border-slate-300 rounded-xl px-3 py-2 bg-white text-sm';
           fieldGroup.appendChild(input);
-
-          if (val.url) {
-            const imgPrev = document.createElement('img');
-            imgPrev.src = val.url;
-            imgPrev.className = 'h-20 w-auto rounded-xl object-cover mt-1.5 border border-slate-200 shadow-sm';
-            fieldGroup.appendChild(imgPrev);
+          break;
+        }
+        case 'datetime': {
+          const input = document.createElement('input');
+          input.type = 'datetime-local';
+          input.name = key;
+          let dtStr = '';
+          if (val) {
+            const d = new Date(val);
+            if (!isNaN(d)) {
+              d.setMinutes(d.getMinutes() - d.getTimezoneOffset());
+              dtStr = d.toISOString().slice(0, 16);
+            }
           }
+          input.value = dtStr;
+          input.className = 'w-full border border-slate-300 rounded-xl px-3 py-2 bg-white text-sm';
+          fieldGroup.appendChild(input);
+          break;
         }
-        // 4. Content Reference / Category Field (プルダウン選択)
-        else if (typeof val === 'object' && val !== null) {
-          label.innerHTML += `<span class="text-[10px] text-indigo-600 font-normal">選択（参照）</span>`;
-
-          await fetchReferenceCandidates(key);
-          const candidates = referenceCandidates[key] || [];
-
-          const currentSelectedId = val ? (val.id || (typeof val === 'string' ? val : '')) : '';
+        case 'media': {
+          const mediaWrap = document.createElement('div');
+          mediaWrap.className = 'space-y-2';
+          const imgUrl = (val && typeof val === 'object') ? (val.url || '') : (val || '');
+          mediaWrap.innerHTML = `
+            <div class="flex gap-2">
+              <input type="text" name="${key}.url" value="${escapeHtml(imgUrl)}" placeholder="https://images.microcms-assets.io/..." class="flex-1 border border-slate-300 rounded-xl px-3 py-2 bg-white text-xs">
+              <button type="button" onclick="triggerMediaUpload('${key}')" class="bg-indigo-50 text-indigo-600 border border-indigo-200 px-3 py-2 rounded-xl text-xs font-bold active:scale-95 transition flex items-center gap-1 flex-shrink-0">
+                <i class="fa-solid fa-cloud-arrow-up"></i> アップロード
+              </button>
+            </div>
+            ${imgUrl ? `<img src="${escapeHtml(imgUrl)}" id="preview-${key}" class="h-24 w-auto rounded-xl object-cover border border-slate-200 shadow-sm mt-1">` : `<img id="preview-${key}" class="h-24 w-auto rounded-xl object-cover border border-slate-200 shadow-sm mt-1 hidden">`}
+          `;
+          fieldGroup.appendChild(mediaWrap);
+          break;
+        }
+        case 'relation': {
+          const refEp = config.refEndpoint ? config.refEndpoint.split(',')[0].trim() : `${key}s`;
+          await fetchReferenceCandidates(refEp);
+          const candidates = referenceCandidates[refEp] || [];
+          const selectedId = (val && typeof val === 'object') ? val.id : val;
 
           const select = document.createElement('select');
           select.name = key;
           select.dataset.isRelation = "true";
-          select.className = 'w-full border border-slate-300 rounded-xl px-3 py-2 bg-white focus:outline-none focus:ring-2 focus:ring-indigo-500 text-sm font-medium';
-
-          const defaultOpt = document.createElement('option');
-          defaultOpt.value = '';
-          defaultOpt.textContent = '-- 選択してください --';
-          select.appendChild(defaultOpt);
-
-          candidates.forEach(cand => {
+          select.className = 'w-full border border-slate-300 rounded-xl px-3 py-2 bg-white text-sm';
+          select.innerHTML = '<option value="">-- 未選択 --</option>';
+          candidates.forEach(c => {
             const opt = document.createElement('option');
-            opt.value = cand.id;
-            const name = cand.name || cand.title || cand.id;
-            opt.textContent = `${name} (${cand.id})`;
-            if (cand.id === currentSelectedId) opt.selected = true;
+            opt.value = c.id;
+            opt.textContent = `${getItemTitle(c)} (${c.id})`;
+            if (c.id === selectedId) opt.selected = true;
             select.appendChild(opt);
           });
-
-          if (currentSelectedId && !candidates.some(c => c.id === currentSelectedId)) {
-            const currentOpt = document.createElement('option');
-            currentOpt.value = currentSelectedId;
-            currentOpt.textContent = `${formatRelationValue(val)} (${currentSelectedId})`;
-            currentOpt.selected = true;
-            select.appendChild(currentOpt);
-          }
-
-          fieldGroup.appendChild(label);
           fieldGroup.appendChild(select);
+          break;
         }
-        // 5. Rich Text / Content Body
-        else if (key.toLowerCase().includes('content') || key.toLowerCase().includes('body') || (typeof val === 'string' && (val.includes('<') || val.length > 50))) {
-          label.innerHTML += `<span class="text-[10px] text-indigo-600 font-normal">HTML / 本文</span>`;
-          
-          const tabContainer = document.createElement('div');
-          tabContainer.className = 'flex border-b border-slate-200 space-x-3 mb-1.5';
-
-          const btnCode = document.createElement('button');
-          btnCode.type = 'button';
-          btnCode.className = 'pb-1 border-b-2 border-indigo-600 text-indigo-600 font-bold text-xs flex items-center gap-1';
-          btnCode.innerHTML = `<i class="fa-solid fa-code"></i> コード`;
-
-          const btnPrev = document.createElement('button');
-          btnPrev.type = 'button';
-          btnPrev.className = 'pb-1 border-b-2 border-transparent text-slate-400 font-medium text-xs flex items-center gap-1 hover:text-slate-600';
-          btnPrev.innerHTML = `<i class="fa-solid fa-eye"></i> プレビュー`;
-
-          tabContainer.appendChild(btnCode);
-          tabContainer.appendChild(btnPrev);
+        case 'richEditor': {
+          // リッチテキストツールバー + エディタ
+          const toolbar = document.createElement('div');
+          toolbar.className = 'flex items-center gap-1 p-1 bg-slate-200/70 rounded-lg overflow-x-auto no-scrollbar text-xs mb-1';
+          toolbar.innerHTML = `
+            <button type="button" onclick="insertTag('${key}', '<h2>', '</h2>')" class="px-2 py-1 bg-white rounded hover:bg-slate-50 font-bold">H2</button>
+            <button type="button" onclick="insertTag('${key}', '<h3>', '</h3>')" class="px-2 py-1 bg-white rounded hover:bg-slate-50 font-bold">H3</button>
+            <button type="button" onclick="insertTag('${key}', '<b>', '</b>')" class="px-2 py-1 bg-white rounded hover:bg-slate-50 font-bold"><i class="fa-solid fa-bold"></i></button>
+            <button type="button" onclick="insertTag('${key}', '<ul>\\n  <li>', '</li>\\n</ul>')" class="px-2 py-1 bg-white rounded hover:bg-slate-50"><i class="fa-solid fa-list-ul"></i></button>
+            <button type="button" onclick="insertTag('${key}', '<blockquote>', '</blockquote>')" class="px-2 py-1 bg-white rounded hover:bg-slate-50"><i class="fa-solid fa-quote-left"></i></button>
+            <button type="button" onclick="promptInsertLink('${key}')" class="px-2 py-1 bg-white rounded hover:bg-slate-50"><i class="fa-solid fa-link"></i></button>
+            <button type="button" onclick="triggerMediaUploadForEditor('${key}')" class="px-2 py-1 bg-indigo-50 text-indigo-600 rounded hover:bg-indigo-100 font-bold"><i class="fa-regular fa-image"></i> 画像挿入</button>
+            <div class="ml-auto flex gap-1">
+              <button type="button" id="tab-code-${key}" onclick="toggleEditorTab('${key}', 'code')" class="px-2 py-1 bg-indigo-600 text-white rounded font-bold text-[10px]">HTML</button>
+              <button type="button" id="tab-prev-${key}" onclick="toggleEditorTab('${key}', 'prev')" class="px-2 py-1 bg-white text-slate-600 rounded font-bold text-[10px]">プレビュー</button>
+            </div>
+          `;
 
           const textarea = document.createElement('textarea');
+          textarea.id = `editor-textarea-${key}`;
           textarea.name = key;
           textarea.rows = 6;
-          textarea.value = val || '';
-          textarea.placeholder = `${key} を入力`;
-          textarea.className = 'w-full border border-slate-300 rounded-xl p-3 bg-white focus:outline-none focus:ring-2 focus:ring-indigo-500 font-mono text-sm leading-relaxed';
+          textarea.value = typeof val === 'string' ? val : '';
+          textarea.className = 'w-full border border-slate-300 rounded-xl p-2.5 bg-white text-sm font-mono leading-relaxed';
 
-          const previewDiv = document.createElement('div');
-          previewDiv.className = 'w-full min-h-[160px] max-h-[300px] overflow-y-auto border border-slate-200 rounded-xl p-3 bg-white hidden html-preview-content';
-          previewDiv.innerHTML = val || '<span class="text-slate-400 italic">（内容がありません）</span>';
+          const previewBox = document.createElement('div');
+          previewBox.id = `editor-prevbox-${key}`;
+          previewBox.className = 'w-full min-h-[140px] max-h-72 overflow-y-auto border border-slate-200 rounded-xl p-3 bg-white hidden html-preview-content';
+          previewBox.innerHTML = textarea.value || '<span class="text-slate-400 italic">（プレビュー内容なし）</span>';
 
-          btnCode.onclick = () => {
-            btnCode.className = 'pb-1 border-b-2 border-indigo-600 text-indigo-600 font-bold text-xs flex items-center gap-1';
-            btnPrev.className = 'pb-1 border-b-2 border-transparent text-slate-400 font-medium text-xs flex items-center gap-1 hover:text-slate-600';
-            textarea.classList.remove('hidden');
-            previewDiv.classList.add('hidden');
-          };
-
-          btnPrev.onclick = () => {
-            btnPrev.className = 'pb-1 border-b-2 border-indigo-600 text-indigo-600 font-bold text-xs flex items-center gap-1';
-            btnCode.className = 'pb-1 border-b-2 border-transparent text-slate-400 font-medium text-xs flex items-center gap-1 hover:text-slate-600';
-            previewDiv.innerHTML = textarea.value.trim() || '<span class="text-slate-400 italic">（内容がありません）</span>';
-            textarea.classList.add('hidden');
-            previewDiv.classList.remove('hidden');
-          };
-
-          fieldGroup.appendChild(label);
-          fieldGroup.appendChild(tabContainer);
+          fieldGroup.appendChild(toolbar);
           fieldGroup.appendChild(textarea);
-          fieldGroup.appendChild(previewDiv);
+          fieldGroup.appendChild(previewBox);
+          break;
         }
-        // 6. Normal Text Field
-        else {
+        case 'textarea': {
+          const textarea = document.createElement('textarea');
+          textarea.name = key;
+          textarea.rows = 4;
+          textarea.value = typeof val === 'string' ? val : '';
+          textarea.placeholder = placeholder || key;
+          textarea.className = 'w-full border border-slate-300 rounded-xl p-2.5 bg-white text-sm';
+          fieldGroup.appendChild(textarea);
+          break;
+        }
+        default: {
           const input = document.createElement('input');
-          input.type = typeof val === 'number' ? 'number' : 'text';
+          input.type = 'text';
           input.name = key;
           input.value = val !== undefined && val !== null ? val : '';
-          input.placeholder = key;
-          input.className = 'w-full border border-slate-300 rounded-xl px-3 py-2 bg-white focus:outline-none focus:ring-2 focus:ring-indigo-500 text-sm';
-          fieldGroup.appendChild(label);
+          input.placeholder = placeholder || key;
+          input.className = 'w-full border border-slate-300 rounded-xl px-3 py-2 bg-white text-sm';
           fieldGroup.appendChild(input);
         }
-
-        fieldsContainer.appendChild(fieldGroup);
       }
 
-      modalEditor.classList.remove('hidden');
+      container.appendChild(fieldGroup);
+    }
+
+    function promptAddNewField() {
+      const fieldName = prompt('追加するフィールド名（キー名）を入力してください:');
+      if (!fieldName || !fieldName.trim()) return;
+      const cleanKey = fieldName.trim();
+
+      const type = prompt('フィールドの型を選択してください:\n1: text (短文)\n2: textarea (長文)\n3: richEditor (HTML/本文)\n4: number (数値)\n5: boolean (真偽値)\n6: media (画像)\n7: datetime (日時)', '1');
+      const typeMap = { '1': 'text', '2': 'textarea', '3': 'richEditor', '4': 'number', '5': 'boolean', '6': 'media', '7': 'datetime' };
+      const selectedType = typeMap[type] || 'text';
+
+      const container = document.getElementById('editor-fields');
+      appendFieldInput(container, cleanKey, selectedType, '');
+
+      // キャッシュに記憶
+      if (!config.schemaCache) config.schemaCache = {};
+      if (!config.schemaCache[config.endpoint]) config.schemaCache[config.endpoint] = {};
+      config.schemaCache[config.endpoint][cleanKey] = selectedType;
+      saveStoredConfig(config);
+    }
+
+    // --- Rich Text Editor Helpers ---
+    function insertTag(key, openTag, closeTag) {
+      const ta = document.getElementById(`editor-textarea-${key}`);
+      if (!ta) return;
+      const start = ta.selectionStart;
+      const end = ta.selectionEnd;
+      const selText = ta.value.substring(start, end);
+      const rep = openTag + (selText || 'テキスト') + closeTag;
+      ta.value = ta.value.substring(0, start) + rep + ta.value.substring(end);
+      ta.focus();
+      ta.setSelectionRange(start + openTag.length, start + rep.length - closeTag.length);
+    }
+
+    function promptInsertLink(key) {
+      const url = prompt('リンク先URLを入力してください:', 'https://');
+      if (!url) return;
+      insertTag(key, `<a href="${url}" target="_blank">`, '</a>');
+    }
+
+    function toggleEditorTab(key, tab) {
+      const ta = document.getElementById(`editor-textarea-${key}`);
+      const prev = document.getElementById(`editor-prevbox-${key}`);
+      const btnCode = document.getElementById(`tab-code-${key}`);
+      const btnPrev = document.getElementById(`tab-prev-${key}`);
+
+      if (tab === 'code') {
+        ta.classList.remove('hidden');
+        prev.classList.add('hidden');
+        btnCode.className = 'px-2 py-1 bg-indigo-600 text-white rounded font-bold text-[10px]';
+        btnPrev.className = 'px-2 py-1 bg-white text-slate-600 rounded font-bold text-[10px]';
+      } else {
+        prev.innerHTML = ta.value.trim() || '<span class="text-slate-400 italic">（プレビュー内容なし）</span>';
+        ta.classList.add('hidden');
+        prev.classList.remove('hidden');
+        btnPrev.className = 'px-2 py-1 bg-indigo-600 text-white rounded font-bold text-[10px]';
+        btnCode.className = 'px-2 py-1 bg-white text-slate-600 rounded font-bold text-[10px]';
+      }
+    }
+
+    // --- Media Upload Trigger ---
+    function triggerMediaUpload(key) {
+      currentUploadTargetField = { type: 'field', key: key };
+      mediaUploaderInput.click();
+    }
+
+    function triggerMediaUploadForEditor(key) {
+      currentUploadTargetField = { type: 'editor', key: key };
+      mediaUploaderInput.click();
+    }
+
+    async function handleFileSelected(e) {
+      const file = e.target.files[0];
+      if (!file) return;
+      const url = await uploadMediaFile(file);
+      e.target.value = ''; // リセット
+
+      if (!url || !currentUploadTargetField) return;
+
+      if (currentUploadTargetField.type === 'field') {
+        const input = document.querySelector(`input[name="${currentUploadTargetField.key}.url"]`);
+        if (input) input.value = url;
+        const prevImg = document.getElementById(`preview-${currentUploadTargetField.key}`);
+        if (prevImg) {
+          prevImg.src = url;
+          prevImg.classList.remove('hidden');
+        }
+      } else if (currentUploadTargetField.type === 'editor') {
+        const ta = document.getElementById(`editor-textarea-${currentUploadTargetField.key}`);
+        if (ta) {
+          const imgTag = `\n<img src="${url}" alt="" />\n`;
+          const pos = ta.selectionStart || ta.value.length;
+          ta.value = ta.value.substring(0, pos) + imgTag + ta.value.substring(pos);
+        }
+      }
     }
 
     function closeEditorModal() {
@@ -681,56 +884,54 @@
       const payload = {};
       let customId = null;
 
-      try {
-        inputs.forEach(el => {
-          if (!el.name) return;
+      inputs.forEach(el => {
+        if (!el.name) return;
+        if (el.name === 'id') {
+          if (el.value.trim()) customId = el.value.trim();
+          return;
+        }
 
-          if (el.name === 'id') {
-            if (el.value.trim()) customId = el.value.trim();
-            return;
-          }
+        if (el.dataset.isRelation === 'true') {
+          payload[el.name] = el.value.trim() ? el.value.trim() : null;
+          return;
+        }
 
-          if (el.dataset.isRelation === "true") {
-            const rawVal = el.value.trim();
-            payload[el.name] = rawVal ? rawVal : null;
-            return;
-          }
+        if (el.name.includes('.')) {
+          const [parent, child] = el.name.split('.');
+          payload[parent] = payload[parent] || {};
+          payload[parent][child] = el.value;
+        } else if (el.type === 'checkbox') {
+          payload[el.name] = el.checked;
+        } else if (el.type === 'number') {
+          payload[el.name] = el.value === '' ? null : Number(el.value);
+        } else if (el.type === 'datetime-local') {
+          payload[el.name] = el.value ? new Date(el.value).toISOString() : null;
+        } else {
+          payload[el.name] = el.value;
+        }
+      });
 
-          if (el.name.includes('.')) {
-            const [parent, child] = el.name.split('.');
-            payload[parent] = payload[parent] || {};
-            payload[parent][child] = el.value;
-          } else if (el.type === 'checkbox') {
-            payload[el.name] = el.checked;
-          } else if (el.type === 'number') {
-            payload[el.name] = Number(el.value);
-          } else {
-            payload[el.name] = el.value;
-          }
-        });
-      } catch (err) {
-        showToast(err.message, 'fa-triangle-exclamation text-amber-400');
-        return;
+      showToast(isDraft ? '下書き保存中...' : '公開・保存中...', 'fa-spinner fa-spin');
+
+      const isObject = config.apiType === 'object';
+      let url = `https://${config.domain}.microcms.io/api/v1/${config.endpoint}`;
+      let method = 'POST';
+
+      if (isObject) {
+        method = 'PATCH'; // 単一オブジェクトの更新
+      } else if (!isCreating) {
+        url += `/${currentEditingItem.id}`;
+        method = 'PATCH';
+      } else if (customId) {
+        url += `/${customId}`;
+        method = 'PUT';
       }
 
-      showToast(isDraft ? '下書き保存中...' : '保存中...', 'fa-spinner fa-spin');
+      if (isDraft) {
+        url += (url.includes('?') ? '&' : '?') + 'status=draft';
+      }
 
       try {
-        let url = `https://${config.domain}.microcms.io/api/v1/${config.endpoint}`;
-        let method = 'POST';
-
-        if (!isCreating) {
-          url += `/${currentEditingItem.id}`;
-          method = 'PATCH';
-        } else if (customId) {
-          url += `/${customId}`;
-          method = 'PUT';
-        }
-
-        if (isDraft) {
-          url += (url.includes('?') ? '&' : '?') + 'status=draft';
-        }
-
         const res = await fetch(url, {
           method: method,
           headers: {
@@ -742,10 +943,10 @@
 
         if (!res.ok) {
           const errData = await res.json().catch(() => ({}));
-          throw new Error(errData.message || `HTTPエラー ${res.status}`);
+          throw new Error(errData.message || `エラー (${res.status})`);
         }
 
-        showToast(isDraft ? '下書き保存しました' : '公開・保存しました', 'fa-check text-emerald-400');
+        showToast(isDraft ? '下書き保存しました' : '保存・公開が完了しました', 'fa-check text-emerald-400');
         closeEditorModal();
         fetchContents();
       } catch (err) {
@@ -755,25 +956,17 @@
     }
 
     async function deleteContent() {
-      if (!currentEditingItem) return;
-
-      if (!confirm(`コンテンツ [${currentEditingItem.id}] を削除しますか？`)) {
-        return;
-      }
+      if (!currentEditingItem || config.apiType === 'object') return;
+      if (!confirm(`[${currentEditingItem.id}] を削除しますか？`)) return;
 
       showToast('削除中...', 'fa-spinner fa-spin');
-
       try {
         const url = `https://${config.domain}.microcms.io/api/v1/${config.endpoint}/${currentEditingItem.id}`;
         const res = await fetch(url, {
           method: 'DELETE',
-          headers: {
-            'X-MICROCMS-API-KEY': config.apiKey
-          }
+          headers: { 'X-MICROCMS-API-KEY': config.apiKey }
         });
-
-        if (!res.ok) throw new Error(`削除に失敗しました (${res.status})`);
-
+        if (!res.ok) throw new Error(`削除失敗 (${res.status})`);
         showToast('削除完了しました', 'fa-check text-emerald-400');
         closeEditorModal();
         fetchContents();
@@ -788,6 +981,7 @@
       document.getElementById('cfg-domain').value = config.domain;
       document.getElementById('cfg-apikey').value = config.apiKey;
       document.getElementById('cfg-endpoint').value = config.endpoint;
+      document.getElementById('cfg-apitype').value = config.apiType || 'list';
       document.getElementById('cfg-title-field').value = config.titleField || '';
       document.getElementById('cfg-ref-endpoint').value = config.refEndpoint || '';
       modalSettings.classList.remove('hidden');
@@ -801,6 +995,7 @@
       const d = document.getElementById('cfg-domain').value.trim();
       const a = document.getElementById('cfg-apikey').value.trim();
       const e = document.getElementById('cfg-endpoint').value.trim();
+      const type = document.getElementById('cfg-apitype').value;
       const t = document.getElementById('cfg-title-field').value.trim();
       const r = document.getElementById('cfg-ref-endpoint').value.trim();
 
@@ -812,42 +1007,39 @@
       config.domain = d;
       config.apiKey = a;
       config.endpoint = e;
+      config.apiType = type;
       config.titleField = t;
       config.refEndpoint = r;
 
       await saveStoredConfig(config);
-
       closeSettingsModal();
       fetchContents();
     }
 
-    // --- Helpers ---
+    // --- Utilities ---
     function showToast(msg, iconClass = 'fa-info-circle') {
       const toast = document.getElementById('toast');
       const toastMsg = document.getElementById('toast-msg');
       const toastIcon = document.getElementById('toast-icon');
-
       toastMsg.textContent = msg;
       toastIcon.className = `fa-solid ${iconClass}`;
-
       toast.classList.remove('opacity-0');
       toast.classList.add('opacity-100');
-
       setTimeout(() => {
         toast.classList.remove('opacity-100');
         toast.classList.add('opacity-0');
-      }, 3200);
+      }, 3000);
     }
 
     function escapeHtml(str) {
       if (typeof str !== 'string') return str;
-      return str.replace(/[&<>"']/g, match => ({
+      return str.replace(/[&<>"']/g, m => ({
         '&': '&amp;',
         '<': '&lt;',
         '>': '&gt;',
         '"': '&quot;',
         "'": '&#39;'
-      })[match]);
+      })[m]);
     }
   </script>
 </body>
