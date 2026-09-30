@@ -46,5 +46,6 @@
     "url": "https://github.com/luthpg/microCMS-editor"
   },
   "author": "luth",
-  "license": "MIT"
+  "license": "MIT",
+  "packageManager": "pnpm@11.25.0"
 }
