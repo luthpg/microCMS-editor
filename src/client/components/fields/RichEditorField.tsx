@@ -1,3 +1,4 @@
+import DOMPurify from 'dompurify';
 import { Code, Eye, Heading2, Heading3, Link as LinkIcon } from 'lucide-react';
 import type * as React from 'react';
 import { useRef, useState } from 'react';
@@ -139,7 +140,7 @@ export const RichEditorField: React.FC<Props> = ({
             id={field.fieldId}
             placeholder="HTMLまたはテキストを入力..."
             rows={8}
-            className="font-mono text-sm leading-relaxed"
+            className="font-mono text-base leading-relaxed"
             value={value ?? ''}
             onChange={(e) => onChange(e.target.value)}
           />
@@ -148,8 +149,12 @@ export const RichEditorField: React.FC<Props> = ({
         <TabsContent value="preview" className="mt-1">
           <div className="min-h-[180px] max-h-[300px] overflow-y-auto rounded-xl border border-slate-200 bg-slate-50/60 p-3.5 prose-preview dark:border-slate-800 dark:bg-slate-900/60">
             {value ? (
-              /* biome-ignore lint/security/noDangerouslySetInnerHtml: microCMS rich editor HTML preview */
-              <div dangerouslySetInnerHTML={{ __html: value }} />
+              <div
+                /* biome-ignore lint/security/noDangerouslySetInnerHtml: microCMS rich editor HTML preview (sanitized) */
+                dangerouslySetInnerHTML={{
+                  __html: DOMPurify.sanitize(value),
+                }}
+              />
             ) : (
               <p className="text-xs text-slate-400 italic">プレビューなし</p>
             )}

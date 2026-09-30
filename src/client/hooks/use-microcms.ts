@@ -25,21 +25,32 @@ export function useMicroCMS(domain: string, apiKey: string) {
   /**
    * API一覧を取得 (Management API)
    */
-  const fetchApis = useCallback(async (): Promise<ApiListItem[]> => {
-    if (!domain || !apiKey) return [];
-    try {
-      const res = await rpc.api.apis.$get({
-        header: getHeaders(),
-      });
-      if (!res.ok) {
-        throw new Error(`API一覧の取得に失敗しました (${res.status})`);
+  const fetchApis = useCallback(
+    async (
+      domainOverride?: string,
+      apiKeyOverride?: string,
+    ): Promise<ApiListItem[]> => {
+      const d = (domainOverride ?? domain).trim();
+      const k = (apiKeyOverride ?? apiKey).trim();
+      if (!d || !k) return [];
+      try {
+        const res = await rpc.api.apis.$get({
+          header: {
+            'x-microcms-domain': d,
+            'x-microcms-key': k,
+          },
+        });
+        if (!res.ok) {
+          throw new Error(`API一覧の取得に失敗しました (${res.status})`);
+        }
+        return (await res.json()) as ApiListItem[];
+      } catch (err: unknown) {
+        console.error('fetchApis error:', err);
+        return [];
       }
-      return (await res.json()) as ApiListItem[];
-    } catch (err: unknown) {
-      console.error('fetchApis error:', err);
-      return [];
-    }
-  }, [domain, apiKey, getHeaders]);
+    },
+    [domain, apiKey],
+  );
 
   /**
    * エンドポイントのスキーマを取得

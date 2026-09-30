@@ -80,9 +80,26 @@ export const EditorDrawer: React.FC<Props> = ({
     }
 
     const payload: Record<string, unknown> = {};
+    const normalizeValue = (value: unknown, key: 'id' | 'url'): unknown => {
+      if (Array.isArray(value)) {
+        return value.map((entry) => normalizeValue(entry, key));
+      }
+      if (value != null && typeof value === 'object' && key in value) {
+        return (value as Record<string, unknown>)[key];
+      }
+      return value;
+    };
+
     for (const field of schema.fields) {
       if (field.fieldId in formData) {
-        payload[field.fieldId] = formData[field.fieldId];
+        const val = formData[field.fieldId];
+        if (field.kind === 'relation') {
+          payload[field.fieldId] = normalizeValue(val, 'id');
+        } else if (field.kind === 'media') {
+          payload[field.fieldId] = normalizeValue(val, 'url');
+        } else {
+          payload[field.fieldId] = val;
+        }
       }
     }
 
@@ -173,7 +190,7 @@ export const EditorDrawer: React.FC<Props> = ({
                 placeholder="例: article-01 (半角英数・記号)"
                 value={customId}
                 onChange={(e) => setCustomId(e.target.value)}
-                className="bg-white dark:bg-slate-950 font-mono text-sm"
+                className="bg-white dark:bg-slate-950 font-mono text-base"
               />
             </div>
           )}

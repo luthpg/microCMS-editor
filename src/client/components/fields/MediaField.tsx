@@ -155,7 +155,7 @@ export const MediaField: React.FC<Props> = ({
           placeholder="画像URL (https://...)"
           value={currentUrl}
           onChange={(e) => handleUrlChange(e.target.value)}
-          className="text-xs"
+          className="text-base"
         />
         {onUpload && currentUrl && (
           <Button

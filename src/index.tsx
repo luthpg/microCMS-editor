@@ -11,7 +11,7 @@ const app = new Hono<AppEnv>();
 
 app.use(renderer);
 
-// ヘッダー検証ヘルパー
+// ヘッダー検証ヘルパー（ドメインのホワイトリスト正規表現チェック付き）
 function getClientCredentials(
   headers: Record<string, string | undefined>,
   c: Context<AppEnv>,
@@ -19,6 +19,9 @@ function getClientCredentials(
   const domain = headers['x-microcms-domain'];
   const key = headers['x-microcms-key'];
   if (!domain || !key) return c.json({ error: 'Auth headers missing' }, 400);
+  if (!/^[a-z0-9-]{1,63}$/i.test(domain)) {
+    return c.json({ error: 'Invalid microCMS domain' }, 400);
+  }
   return {
     'x-microcms-domain': domain,
     'x-microcms-key': key,
@@ -40,7 +43,7 @@ const apiRoutes = app
     );
 
     if (!res.ok) {
-      const err = await res.text();
+      const err = await res.text().catch(() => '');
       return c.json(
         { error: `Management API error (${res.status}): ${err}` },
         400,
@@ -56,24 +59,27 @@ const apiRoutes = app
     '/schema',
     validator('header', getClientCredentials),
     validator('query', (query, c) => {
-      const endpoint = query.endpoint;
+      const endpoint = Array.isArray(query.endpoint)
+        ? query.endpoint[0]
+        : query.endpoint;
       if (!endpoint) return c.json({ error: 'Missing endpoint' }, 400);
-      return { endpoint };
+      return { endpoint: String(endpoint) };
     }),
     async (c) => {
       const { 'x-microcms-domain': domain, 'x-microcms-key': key } =
         c.req.valid('header');
       const { endpoint } = c.req.valid('query');
+      const ep = encodeURIComponent(endpoint);
 
       const res = await fetch(
-        `https://${domain}.microcms-management.io/api/v1/apis/${endpoint}`,
+        `https://${domain}.microcms-management.io/api/v1/apis/${ep}`,
         {
           headers: { 'X-MICROCMS-API-KEY': key },
         },
       );
 
       if (!res.ok) {
-        const err = await res.text();
+        const err = await res.text().catch(() => '');
         return c.json(
           { error: `Management API error (${res.status}): ${err}` },
           400,
@@ -95,28 +101,46 @@ const apiRoutes = app
     '/contents',
     validator('header', getClientCredentials),
     validator('query', (query, c) => {
-      const endpoint = query.endpoint;
+      const endpoint = Array.isArray(query.endpoint)
+        ? query.endpoint[0]
+        : query.endpoint;
       if (!endpoint) return c.json({ error: 'Missing endpoint' }, 400);
+      const isObject =
+        (Array.isArray(query.isObject) ? query.isObject[0] : query.isObject) ===
+        'true';
+      const limit = String(
+        Array.isArray(query.limit) ? query.limit[0] : (query.limit ?? '50'),
+      );
+      const offset = String(
+        Array.isArray(query.offset) ? query.offset[0] : (query.offset ?? '0'),
+      );
       return {
-        endpoint,
-        isObject: query.isObject === 'true',
-        limit: query.limit ?? '50',
-        offset: query.offset ?? '0',
+        endpoint: String(endpoint),
+        isObject,
+        limit,
+        offset,
       };
     }),
     async (c) => {
       const { 'x-microcms-domain': domain, 'x-microcms-key': key } =
         c.req.valid('header');
       const { endpoint, isObject, limit, offset } = c.req.valid('query');
+      const ep = encodeURIComponent(endpoint);
 
       const url = isObject
-        ? `https://${domain}.microcms.io/api/v1/${endpoint}?draftKey=1`
-        : `https://${domain}.microcms.io/api/v1/${endpoint}?draftKey=1&limit=${limit}&offset=${offset}`;
+        ? `https://${domain}.microcms.io/api/v1/${ep}?draftKey=1`
+        : `https://${domain}.microcms.io/api/v1/${ep}?draftKey=1&limit=${encodeURIComponent(limit)}&offset=${encodeURIComponent(offset)}`;
 
       const res = await fetch(url, {
         headers: { 'X-MICROCMS-API-KEY': key },
       });
-      const data = await res.json<unknown>();
+      const data = await res.json<unknown>().catch(() => ({}));
+      if (!res.ok) {
+        return c.json(
+          { error: `microCMS error (${res.status})`, detail: data },
+          400,
+        );
+      }
       return c.json(data, 200);
     },
   )
@@ -126,15 +150,38 @@ const apiRoutes = app
     '/contents',
     validator('header', getClientCredentials),
     validator('query', (query, c) => {
-      const endpoint = query.endpoint;
+      const endpoint = Array.isArray(query.endpoint)
+        ? query.endpoint[0]
+        : query.endpoint;
       if (!endpoint) return c.json({ error: 'Missing endpoint' }, 400);
+      const isObject =
+        (Array.isArray(query.isObject) ? query.isObject[0] : query.isObject) ===
+        'true';
+      const contentId = String(
+        Array.isArray(query.contentId)
+          ? query.contentId[0]
+          : (query.contentId ?? ''),
+      );
+      const customId = String(
+        Array.isArray(query.customId)
+          ? query.customId[0]
+          : (query.customId ?? ''),
+      );
+      const status = String(
+        Array.isArray(query.status) ? query.status[0] : (query.status ?? ''),
+      );
+      const _method = String(
+        Array.isArray(query._method)
+          ? query._method[0]
+          : (query._method ?? 'POST'),
+      );
       return {
-        endpoint,
-        isObject: query.isObject === 'true',
-        contentId: query.contentId ?? '',
-        customId: query.customId ?? '',
-        status: query.status ?? '',
-        _method: (query._method ?? 'POST') as string,
+        endpoint: String(endpoint),
+        isObject,
+        contentId,
+        customId,
+        status,
+        _method,
       };
     }),
     validator('json', (json) => {
@@ -147,15 +194,16 @@ const apiRoutes = app
         c.req.valid('query');
       const payload = c.req.valid('json');
 
-      let targetUrl = `https://${domain}.microcms.io/api/v1/${endpoint}`;
+      const ep = encodeURIComponent(endpoint);
+      let targetUrl = `https://${domain}.microcms.io/api/v1/${ep}`;
       let method = (_method || 'POST').toUpperCase();
 
       if (isObject) {
         method = 'PATCH';
       } else if (contentId) {
-        targetUrl += `/${contentId}`;
+        targetUrl += `/${encodeURIComponent(contentId)}`;
       } else if (customId) {
-        targetUrl += `/${customId}`;
+        targetUrl += `/${encodeURIComponent(customId)}`;
         method = 'PUT';
       }
 
@@ -172,6 +220,12 @@ const apiRoutes = app
         body: JSON.stringify(payload),
       });
       const data = await res.json<unknown>().catch(() => ({}));
+      if (!res.ok) {
+        const message =
+          (data as { message?: string })?.message ??
+          `保存に失敗しました (${res.status})`;
+        return c.json({ message, detail: data }, 400);
+      }
       return c.json(data, 200);
     },
   )
@@ -181,19 +235,28 @@ const apiRoutes = app
     '/contents',
     validator('header', getClientCredentials),
     validator('query', (query, c) => {
-      const endpoint = query.endpoint;
-      const contentId = query.contentId;
+      const endpoint = Array.isArray(query.endpoint)
+        ? query.endpoint[0]
+        : query.endpoint;
+      const contentId = Array.isArray(query.contentId)
+        ? query.contentId[0]
+        : query.contentId;
       if (!endpoint || !contentId)
         return c.json({ error: 'Missing parameter' }, 400);
-      return { endpoint, contentId };
+      return {
+        endpoint: String(endpoint),
+        contentId: String(contentId),
+      };
     }),
     async (c) => {
       const { 'x-microcms-domain': domain, 'x-microcms-key': key } =
         c.req.valid('header');
       const { endpoint, contentId } = c.req.valid('query');
+      const ep = encodeURIComponent(endpoint);
+      const cid = encodeURIComponent(contentId);
 
       const res = await fetch(
-        `https://${domain}.microcms.io/api/v1/${endpoint}/${contentId}`,
+        `https://${domain}.microcms.io/api/v1/${ep}/${cid}`,
         {
           method: 'DELETE',
           headers: { 'X-MICROCMS-API-KEY': key },
@@ -204,22 +267,34 @@ const apiRoutes = app
     },
   )
 
-  // 5. 画像アップロード (Media API)
+  // 5. 画像アップロード (Media API は management.io)
   .post('/media', validator('header', getClientCredentials), async (c) => {
     const { 'x-microcms-domain': domain, 'x-microcms-key': key } =
       c.req.valid('header');
     const body = await c.req.parseBody();
-    const file = body.files as File;
-    if (!file) return c.json({ error: 'No file provided' }, 400);
+    const file = body.files;
+    if (!(file instanceof File)) {
+      return c.json({ error: 'No file provided' }, 400);
+    }
 
     const formData = new FormData();
     formData.append('files', file);
 
-    const res = await fetch(`https://${domain}.microcms.io/api/v1/media`, {
-      method: 'POST',
-      headers: { 'X-MICROCMS-API-KEY': key },
-      body: formData,
-    });
+    const res = await fetch(
+      `https://${domain}.microcms-management.io/api/v1/media`,
+      {
+        method: 'POST',
+        headers: { 'X-MICROCMS-API-KEY': key },
+        body: formData,
+      },
+    );
+    if (!res.ok) {
+      const errText = await res.text().catch(() => '');
+      return c.json(
+        { error: `Media upload error (${res.status}): ${errText}` },
+        400,
+      );
+    }
     const data = await res.json<{ url: string }>();
     return c.json(data, 200);
   });

@@ -1,3 +1,4 @@
+import DOMPurify from 'dompurify';
 import { Edit3 } from 'lucide-react';
 import type * as React from 'react';
 import { formatDate } from '@/client/utils/helpers';
@@ -79,7 +80,9 @@ export const ObjectView: React.FC<Props> = ({
                     <div
                       className="max-h-36 overflow-auto rounded bg-white p-2.5 text-xs prose-preview border border-slate-200 dark:bg-slate-900 dark:border-slate-800"
                       /* biome-ignore lint/security/noDangerouslySetInnerHtml: microCMS preview */
-                      dangerouslySetInnerHTML={{ __html: String(val) }}
+                      dangerouslySetInnerHTML={{
+                        __html: DOMPurify.sanitize(String(val)),
+                      }}
                     />
                   ) : typeof val === 'boolean' ? (
                     <span

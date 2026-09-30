@@ -21,7 +21,7 @@ interface Props {
   theme: 'light' | 'dark';
   onToggleTheme: () => void;
   onSave: (settings: AppSettings) => void;
-  onFetchApis: () => Promise<ApiListItem[]>;
+  onFetchApis: (domain?: string, apiKey?: string) => Promise<ApiListItem[]>;
 }
 
 export const SettingsDrawer: React.FC<Props> = ({
@@ -48,22 +48,25 @@ export const SettingsDrawer: React.FC<Props> = ({
   }, [settings, isOpen]);
 
   // ドメインとAPIキーが入っていれば、API一覧を取得してみる
-  const loadApiList = useCallback(async () => {
-    if (!domain || !apiKey) return;
-    setLoadingApis(true);
-    try {
-      const list = await onFetchApis();
-      setApiList(list);
-    } finally {
-      setLoadingApis(false);
-    }
-  }, [domain, apiKey, onFetchApis]);
+  const loadApiList = useCallback(
+    async (targetDomain = domain, targetApiKey = apiKey) => {
+      if (!targetDomain || !targetApiKey) return;
+      setLoadingApis(true);
+      try {
+        const list = await onFetchApis(targetDomain, targetApiKey);
+        setApiList(list);
+      } finally {
+        setLoadingApis(false);
+      }
+    },
+    [domain, apiKey, onFetchApis],
+  );
 
   useEffect(() => {
-    if (isOpen && domain && apiKey) {
-      loadApiList();
+    if (isOpen && settings.domain && settings.apiKey) {
+      loadApiList(settings.domain, settings.apiKey);
     }
-  }, [isOpen, domain, apiKey, loadApiList]);
+  }, [isOpen, settings.domain, settings.apiKey, loadApiList]);
 
   const handleSave = () => {
     onSave({ domain, apiKey, endpoint });
@@ -142,7 +145,7 @@ export const SettingsDrawer: React.FC<Props> = ({
                   variant="ghost"
                   size="sm"
                   disabled={loadingApis}
-                  onClick={loadApiList}
+                  onClick={() => loadApiList(domain, apiKey)}
                   className="h-6 px-2 text-[11px] gap-1 text-blue-600"
                 >
                   <RefreshCw

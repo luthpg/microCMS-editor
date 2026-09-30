@@ -101,13 +101,13 @@ export const Header: React.FC<Props> = ({
       {!isObject && endpoint && (
         <div className="px-4 pb-2.5">
           <div className="relative">
-            <Search className="absolute left-3 top-1/2 h-3.5 w-3.5 -translate-y-1/2 text-slate-400" />
+            <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-400" />
             <Input
               type="search"
               placeholder="タイトルやIDで検索..."
               value={searchQuery}
               onChange={(e) => onSearchChange(e.target.value)}
-              className="h-9 rounded-xl bg-slate-100/80 pl-8 text-xs border-transparent focus:bg-white dark:bg-slate-800/80 dark:focus:bg-slate-900"
+              className="h-10 rounded-xl bg-slate-100/80 pl-9 text-base border-transparent focus:bg-white dark:bg-slate-800/80 dark:focus:bg-slate-900"
             />
           </div>
         </div>

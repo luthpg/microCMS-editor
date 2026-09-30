@@ -63,15 +63,13 @@ export const App: React.FC = () => {
     [],
   );
 
-  // データの読み込み
+  // データの読み込み (offset 0 からリセットして取得)
   const loadData = useCallback(
-    async (targetEndpoint = endpoint, resetOffset = true) => {
+    async (targetEndpoint = endpoint) => {
       if (!domain || !apiKey || !targetEndpoint) {
         setIsSettingsOpen(true);
         return;
       }
-
-      const targetOffset = resetOffset ? 0 : offset;
 
       // 1. スキーマを取得
       const schemaData = await fetchSchema(targetEndpoint);
@@ -80,26 +78,15 @@ export const App: React.FC = () => {
 
         // 2. コンテンツを取得
         const isObj = schemaData.apiType === 'object';
-        const contentRes = await fetchContents(
-          targetEndpoint,
-          isObj,
-          targetOffset,
-          limit,
-        );
+        const contentRes = await fetchContents(targetEndpoint, isObj, 0, limit);
 
-        if (resetOffset) {
-          setItems(contentRes.items);
-          setOffset(contentRes.items.length);
-        } else {
-          setItems((prev) => [...prev, ...contentRes.items]);
-          setOffset((prev) => prev + contentRes.items.length);
-        }
-
+        setItems(contentRes.items);
+        setOffset(contentRes.items.length);
         setSingleObject(contentRes.singleObject);
         setTotalCount(contentRes.totalCount);
       }
     },
-    [domain, apiKey, endpoint, offset, fetchSchema, fetchContents],
+    [domain, apiKey, endpoint, fetchSchema, fetchContents],
   );
 
   // さらに読み込む
@@ -118,7 +105,7 @@ export const App: React.FC = () => {
   // 初回マウント時、または設定変更時に読み込み
   useEffect(() => {
     if (domain && apiKey && endpoint) {
-      loadData(endpoint, true);
+      loadData(endpoint);
     }
   }, [domain, apiKey, endpoint, loadData]);
 
@@ -155,7 +142,7 @@ export const App: React.FC = () => {
           ? 'コンテンツを更新しました'
           : 'コンテンツを新規作成しました',
       );
-      loadData(endpoint, true);
+      loadData(endpoint);
       return { success: true };
     }
     showToast(res.error || '保存に失敗しました', 'error');
@@ -175,7 +162,7 @@ export const App: React.FC = () => {
     const res = await deleteContent(endpoint, id);
     if (res.success) {
       showToast('コンテンツを削除しました');
-      loadData(endpoint, true);
+      loadData(endpoint);
     } else {
       showToast(res.error || '削除に失敗しました', 'error');
     }
@@ -216,7 +203,7 @@ export const App: React.FC = () => {
         loading={loading}
         searchQuery={searchQuery}
         onSearchChange={setSearchQuery}
-        onRefresh={() => loadData(endpoint, true)}
+        onRefresh={() => loadData(endpoint)}
         onOpenSettings={() => setIsSettingsOpen(true)}
         onOpenCreate={handleOpenCreate}
       />
@@ -228,7 +215,7 @@ export const App: React.FC = () => {
           <p className="flex-1 truncate">{apiError}</p>
           <button
             type="button"
-            onClick={() => loadData(endpoint, true)}
+            onClick={() => loadData(endpoint)}
             className="text-[11px] font-semibold underline"
           >
             再試行
@@ -300,7 +287,6 @@ export const App: React.FC = () => {
         onToggleTheme={toggleTheme}
         onSave={(newSettings) => {
           saveSettings(newSettings);
-          loadData(newSettings.endpoint, true);
         }}
         onFetchApis={fetchApis}
       />
