@@ -1,5 +1,10 @@
 import type * as React from 'react';
-import type { ContentItem, FieldSchema, MediaValue } from '@/types';
+import type {
+  ContentItem,
+  FieldSchema,
+  MediaValue,
+  UploadMediaResult,
+} from '@/types';
 import { BooleanField } from './BooleanField';
 import { DateField } from './DateField';
 import { MediaField } from './MediaField';
@@ -14,7 +19,7 @@ interface Props {
   field: FieldSchema;
   value: unknown;
   onChange: (value: unknown) => void;
-  onUpload?: (file: File) => Promise<{ url: string } | null>;
+  onUpload?: (file: File) => Promise<UploadMediaResult>;
   fetchRelationOptions?: (endpoint: string) => Promise<ContentItem[]>;
 }
 

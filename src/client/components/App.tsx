@@ -4,7 +4,7 @@ import { useCallback, useEffect, useMemo, useState } from 'react';
 import { useMicroCMS } from '@/client/hooks/use-microcms';
 import { useSettings } from '@/client/hooks/use-settings';
 import { Button } from '@/components/ui/button';
-import type { ApiSchema, ContentItem } from '@/types';
+import type { ApiSchema, ContentItem, SaveStatus } from '@/types';
 import { ContentList } from './ContentList';
 import { EditorDrawer } from './EditorDrawer';
 import { Header } from './Header';
@@ -134,6 +134,7 @@ export const App: React.FC = () => {
     contentId?: string;
     customId?: string;
     data: Record<string, unknown>;
+    status: SaveStatus;
   }) => {
     const res = await saveContent(params);
     if (res.success) {

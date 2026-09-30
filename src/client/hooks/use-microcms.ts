@@ -6,6 +6,8 @@ import type {
   ApiSchema,
   ContentItem,
   MicroCMSListResponse,
+  SaveStatus,
+  UploadMediaResult,
 } from '@/types';
 
 const rpc = hc<AppType>('/');
@@ -154,12 +156,14 @@ export function useMicroCMS(domain: string, apiKey: string) {
       contentId,
       customId,
       data,
+      status,
     }: {
       endpoint: string;
       isObject: boolean;
       contentId?: string;
       customId?: string;
       data: Record<string, unknown>;
+      status: SaveStatus;
     }): Promise<{ success: boolean; data?: unknown; error?: string }> => {
       try {
         setLoading(true);
@@ -180,7 +184,7 @@ export function useMicroCMS(domain: string, apiKey: string) {
             isObject: String(isObject),
             contentId: contentId ?? '',
             customId: customId ?? '',
-            status: '',
+            status,
             _method: method,
           },
           json: data,
@@ -243,7 +247,7 @@ export function useMicroCMS(domain: string, apiKey: string) {
    * メディアファイルのアップロード
    */
   const uploadMedia = useCallback(
-    async (file: File): Promise<{ url: string } | null> => {
+    async (file: File): Promise<UploadMediaResult> => {
       try {
         const formData = new FormData();
         formData.append('files', file);
@@ -262,7 +266,10 @@ export function useMicroCMS(domain: string, apiKey: string) {
         return data;
       } catch (err: unknown) {
         console.error('Media upload error:', err);
-        return null;
+        return {
+          error:
+            err instanceof Error ? err.message : 'アップロードに失敗しました',
+        };
       }
     },
     [getHeaders],

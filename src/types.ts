@@ -68,3 +68,7 @@ export interface MicroCMSListResponse<T = ContentItem> {
   offset: number;
   limit: number;
 }
+
+export type SaveStatus = 'draft' | '';
+
+export type UploadMediaResult = { url: string } | { error: string };

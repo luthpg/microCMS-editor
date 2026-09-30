@@ -3,13 +3,13 @@ import type * as React from 'react';
 import { useRef, useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
-import type { FieldSchema, MediaValue } from '@/types';
+import type { FieldSchema, MediaValue, UploadMediaResult } from '@/types';
 
 interface Props {
   field: FieldSchema;
   value: MediaValue | string | null | undefined;
   onChange: (value: MediaValue | string | null) => void;
-  onUpload?: (file: File) => Promise<{ url: string } | null>;
+  onUpload?: (file: File) => Promise<UploadMediaResult>;
 }
 
 export const MediaField: React.FC<Props> = ({
@@ -19,6 +19,7 @@ export const MediaField: React.FC<Props> = ({
   onUpload,
 }) => {
   const [uploading, setUploading] = useState(false);
+  const [uploadError, setUploadError] = useState<string | null>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   const currentUrl =
@@ -34,14 +35,21 @@ export const MediaField: React.FC<Props> = ({
 
     try {
       setUploading(true);
+      setUploadError(null);
       const res = await onUpload(file);
-      if (res?.url) {
+      if ('error' in res) {
+        setUploadError(res.error);
+      } else if (res.url) {
         if (typeof value === 'object' && value !== null) {
           onChange({ ...(value as MediaValue), url: res.url });
         } else {
           onChange({ url: res.url });
         }
       }
+    } catch (err: unknown) {
+      setUploadError(
+        err instanceof Error ? err.message : 'アップロードに失敗しました',
+      );
     } finally {
       setUploading(false);
       if (fileInputRef.current) {
@@ -51,6 +59,7 @@ export const MediaField: React.FC<Props> = ({
   };
 
   const handleUrlChange = (url: string) => {
+    setUploadError(null);
     if (!url) {
       onChange(null);
       return;
@@ -63,6 +72,7 @@ export const MediaField: React.FC<Props> = ({
   };
 
   const handleClear = () => {
+    setUploadError(null);
     onChange(null);
   };
 
@@ -137,6 +147,12 @@ export const MediaField: React.FC<Props> = ({
             </Button>
           )}
         </div>
+      )}
+
+      {uploadError && (
+        <p role="alert" className="text-xs text-red-600 dark:text-red-400">
+          {uploadError}
+        </p>
       )}
 
       {/* ファイル選択インプット（非表示） */}

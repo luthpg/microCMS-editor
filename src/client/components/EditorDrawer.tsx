@@ -5,7 +5,12 @@ import { getItemTitle } from '@/client/utils/helpers';
 import { Button } from '@/components/ui/button';
 import { Drawer, DrawerClose, DrawerContent } from '@/components/ui/drawer';
 import { Input } from '@/components/ui/input';
-import type { ApiSchema, ContentItem } from '@/types';
+import type {
+  ApiSchema,
+  ContentItem,
+  SaveStatus,
+  UploadMediaResult,
+} from '@/types';
 import { FieldRenderer } from './fields/FieldRenderer';
 
 interface Props {
@@ -21,8 +26,9 @@ interface Props {
     contentId?: string;
     customId?: string;
     data: Record<string, unknown>;
+    status: SaveStatus;
   }) => Promise<{ success: boolean; error?: string }>;
-  onUpload?: (file: File) => Promise<{ url: string } | null>;
+  onUpload?: (file: File) => Promise<UploadMediaResult>;
   fetchRelationOptions?: (endpoint: string) => Promise<ContentItem[]>;
 }
 
@@ -63,7 +69,7 @@ export const EditorDrawer: React.FC<Props> = ({
     }));
   };
 
-  const handleSave = async () => {
+  const handleSave = async (status: SaveStatus) => {
     setErrorMsg(null);
     setSaving(true);
 
@@ -109,6 +115,7 @@ export const EditorDrawer: React.FC<Props> = ({
       contentId: item?.id,
       customId: item ? undefined : customId,
       data: payload,
+      status,
     });
 
     setSaving(false);
@@ -147,19 +154,6 @@ export const EditorDrawer: React.FC<Props> = ({
             </h3>
             <p className="text-[10px] text-slate-400 font-mono">{endpoint}</p>
           </div>
-          <Button
-            size="sm"
-            disabled={saving}
-            onClick={handleSave}
-            className="h-8 gap-1 px-3 bg-blue-600 hover:bg-blue-700 text-white font-medium"
-          >
-            {saving ? (
-              <Loader2 className="h-3.5 w-3.5 animate-spin" />
-            ) : (
-              <Check className="h-3.5 w-3.5" />
-            )}
-            保存
-          </Button>
         </div>
 
         {/* エラーアラート */}
@@ -218,6 +212,28 @@ export const EditorDrawer: React.FC<Props> = ({
               </p>
             </div>
           )}
+        </div>
+        <div className="flex gap-2 border-t border-slate-100 px-4 py-3 dark:border-slate-800">
+          <Button
+            variant="outline"
+            disabled={saving}
+            onClick={() => handleSave('draft')}
+            className="flex-1"
+          >
+            下書き保存
+          </Button>
+          <Button
+            disabled={saving}
+            onClick={() => handleSave('')}
+            className="flex-1 gap-1 bg-blue-600 hover:bg-blue-700 text-white font-medium"
+          >
+            {saving ? (
+              <Loader2 className="h-3.5 w-3.5 animate-spin" />
+            ) : (
+              <Check className="h-3.5 w-3.5" />
+            )}
+            公開
+          </Button>
         </div>
       </DrawerContent>
     </Drawer>
