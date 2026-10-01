@@ -225,7 +225,7 @@ export const SettingsDrawer: React.FC<Props> = ({
         </div>
 
         {/* フッター */}
-        <div className="border-t border-slate-100 p-4 dark:border-slate-800 flex gap-2">
+        <div className="border-t border-slate-100 p-4 pb-[max(1rem,env(safe-area-inset-bottom,0px))] dark:border-slate-800 flex gap-2">
           <DrawerClose asChild>
             <Button variant="outline" className="flex-1">
               閉じる

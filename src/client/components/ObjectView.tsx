@@ -18,7 +18,7 @@ export const ObjectView: React.FC<Props> = ({
   onOpenEdit,
 }) => {
   return (
-    <div className="p-4 space-y-4 pb-24">
+    <div className="p-4 space-y-4 pb-[calc(6rem+env(safe-area-inset-bottom,0px))]">
       <Card className="rounded-2xl border border-slate-200/80 bg-white shadow-xs dark:border-slate-800 dark:bg-slate-900">
         <CardHeader className="flex flex-row items-center justify-between pb-3">
           <div>

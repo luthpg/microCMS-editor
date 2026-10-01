@@ -81,7 +81,7 @@ export const ContentList: React.FC<Props> = ({
   }
 
   return (
-    <div className="p-4 space-y-2.5 pb-24">
+    <div className="p-4 space-y-2.5 pb-[calc(6rem+env(safe-area-inset-bottom,0px))]">
       {items.map((item) => {
         const title = getItemTitle(item);
         const thumb = getItemThumbnail(item);

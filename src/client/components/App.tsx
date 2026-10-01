@@ -194,7 +194,7 @@ export const App: React.FC = () => {
   const hasMore = !isObject && items.length < totalCount;
 
   return (
-    <div className="flex h-screen flex-col bg-slate-50 text-slate-900 select-none overflow-hidden font-sans dark:bg-slate-950 dark:text-slate-100">
+    <div className="flex h-full w-full flex-col bg-slate-50 text-slate-900 select-none overflow-hidden font-sans dark:bg-slate-950 dark:text-slate-100">
       {/* ヘッダー */}
       <Header
         domain={domain}
@@ -225,7 +225,7 @@ export const App: React.FC = () => {
       )}
 
       {/* メインコンテンツ領域（スクロール可） */}
-      <main className="flex-1 overflow-y-auto">
+      <main className="flex-1 overflow-y-auto overscroll-contain">
         {!isConfigured ? (
           <div className="flex flex-col items-center justify-center p-8 text-center min-h-[70vh]">
             <div className="flex h-16 w-16 items-center justify-center rounded-3xl bg-blue-600/10 text-blue-600 mb-4 dark:bg-blue-950/60 dark:text-blue-400">

@@ -30,7 +30,7 @@ export const Header: React.FC<Props> = ({
   onOpenCreate,
 }) => {
   return (
-    <header className="sticky top-0 z-30 border-b border-slate-200/80 bg-white/80 backdrop-blur-md dark:border-slate-800/80 dark:bg-slate-900/80">
+    <header className="shrink-0 z-30 border-b border-slate-200/80 bg-white/80 backdrop-blur-md pt-safe dark:border-slate-800/80 dark:bg-slate-900/80">
       {/* 上段：ブランド＆アクション */}
       <div className="flex h-14 items-center justify-between px-4">
         {/* 左側：エンドポイント情報 */}
