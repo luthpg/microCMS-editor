@@ -6,7 +6,7 @@ import type { FieldSchema } from '@/types';
 interface Props {
   field: FieldSchema;
   value: string | string[] | null | undefined;
-  onChange: (value: string | string[]) => void;
+  onChange: (value: string[]) => void;
 }
 
 interface OptionItem {
@@ -21,6 +21,11 @@ export const SelectField: React.FC<Props> = ({ field, value, onChange }) => {
       field.selectItems ??
       (field as Record<string, unknown>).items ??
       (field as Record<string, unknown>).options ??
+      (
+        (field as Record<string, unknown>).selectRule as
+          | Record<string, unknown>
+          | undefined
+      )?.options ??
       (
         (field as Record<string, unknown>).selectRule as
           | Record<string, unknown>
@@ -55,18 +60,32 @@ export const SelectField: React.FC<Props> = ({ field, value, onChange }) => {
     });
   }, [field]);
 
-  const isMultiple =
-    field.multiple === true ||
-    field.isMultiple === true ||
-    (field as Record<string, unknown>).selectRule === 'multiple' ||
-    Array.isArray(value);
+  // 複数選択（多択）の判定: selectRule.multiple, field.multiple, field.isMultiple 等に対応
+  const isMultiple = useMemo(() => {
+    if (field.multiple === true || field.isMultiple === true) return true;
+    const rule = field.selectRule;
+    if (rule === 'multiple' || rule === 'multi') return true;
+    if (rule != null && typeof rule === 'object') {
+      const ruleObj = rule as Record<string, unknown>;
+      if (ruleObj.multiple === true || ruleObj.isMultiple === true) return true;
+    }
+    // 既存データが複数要素の配列なら多択とみなす
+    if (Array.isArray(value) && value.length > 1) return true;
+    return false;
+  }, [field, value]);
 
+  // 単一選択時も microCMS の仕様に合わせて配列 (string[]) として返却
   const handleSingleChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
-    onChange(e.target.value);
+    const val = e.target.value;
+    onChange(val ? [val] : []);
   };
 
   const handleMultipleToggle = (itemVal: string) => {
-    const currentList = Array.isArray(value) ? [...value] : [];
+    const currentList = Array.isArray(value)
+      ? [...value]
+      : typeof value === 'string' && value
+        ? [value]
+        : [];
     const index = currentList.indexOf(itemVal);
     if (index > -1) {
       currentList.splice(index, 1);
@@ -76,7 +95,11 @@ export const SelectField: React.FC<Props> = ({ field, value, onChange }) => {
     onChange(currentList);
   };
 
-  const stringValue = typeof value === 'string' ? value : '';
+  const stringValue = Array.isArray(value)
+    ? (value[0] ?? '')
+    : typeof value === 'string'
+      ? value
+      : '';
 
   return (
     <div className="space-y-1.5">

@@ -13,6 +13,20 @@ export type FieldKind =
   | 'repeater'
   | 'file';
 
+export interface SelectRule {
+  multiple?: boolean;
+  isMultiple?: boolean;
+  options?: (
+    | string
+    | { id?: string; value?: string; name?: string; label?: string }
+  )[];
+  items?: (
+    | string
+    | { id?: string; value?: string; name?: string; label?: string }
+  )[];
+  [key: string]: unknown;
+}
+
 export interface FieldSchema {
   fieldId: string;
   name: string;
@@ -23,6 +37,7 @@ export interface FieldSchema {
   isMultiple?: boolean;
   description?: string;
   selectItems?: (string | { value: string; label?: string })[];
+  selectRule?: string | SelectRule;
   /** Management API v1 形式 */
   referenceApi?: { id: string };
   /** Management API が返す実際のキー名 */

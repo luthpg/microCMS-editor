@@ -103,6 +103,15 @@ export const EditorDrawer: React.FC<Props> = ({
           payload[field.fieldId] = normalizeValue(val, 'id');
         } else if (field.kind === 'media') {
           payload[field.fieldId] = normalizeValue(val, 'url');
+        } else if (field.kind === 'select' || field.kind === 'selectRule') {
+          // microCMS はセレクトフィールドに常に配列 (string[]) を要求
+          if (Array.isArray(val)) {
+            payload[field.fieldId] = val.map(String);
+          } else if (val != null && val !== '') {
+            payload[field.fieldId] = [String(val)];
+          } else {
+            payload[field.fieldId] = [];
+          }
         } else {
           payload[field.fieldId] = val;
         }
