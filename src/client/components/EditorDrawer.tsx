@@ -135,36 +135,49 @@ export const EditorDrawer: React.FC<Props> = ({
       : '新規コンテンツ作成';
 
   return (
-    <Drawer open={isOpen} onOpenChange={onOpenChange}>
+    <Drawer open={isOpen} onOpenChange={onOpenChange} repositionInputs={false}>
       <DrawerContent className="max-h-[94dvh] flex flex-col">
         {/* シートヘッダー */}
-        <div className="flex items-center justify-between border-b border-slate-100 px-4 py-3 dark:border-slate-800">
+        <div className="flex items-center justify-between border-b border-slate-100 px-4 py-2.5 dark:border-slate-800 shrink-0">
           <DrawerClose asChild>
             <Button
               variant="ghost"
               size="sm"
-              className="h-8 px-2 text-slate-500"
+              className="h-8 px-2 text-slate-500 hover:text-slate-700 dark:hover:text-slate-300"
             >
               キャンセル
             </Button>
           </DrawerClose>
-          <div className="text-center">
-            <h3 className="text-sm font-bold text-slate-900 dark:text-slate-100 truncate max-w-[200px]">
+          <div className="text-center px-2 min-w-0">
+            <h3 className="text-sm font-bold text-slate-900 dark:text-slate-100 truncate max-w-[180px]">
               {titleText}
             </h3>
             <p className="text-[10px] text-slate-400 font-mono">{endpoint}</p>
           </div>
+          <Button
+            size="sm"
+            disabled={saving}
+            onClick={() => handleSave('')}
+            className="h-8 px-3 text-xs gap-1 bg-blue-600 hover:bg-blue-700 text-white font-medium shrink-0"
+          >
+            {saving ? (
+              <Loader2 className="h-3 w-3 animate-spin" />
+            ) : (
+              <Check className="h-3 w-3" />
+            )}
+            公開
+          </Button>
         </div>
 
         {/* エラーアラート */}
         {errorMsg && (
-          <div className="mx-4 mt-3 rounded-xl bg-red-50 p-2.5 text-xs text-red-600 border border-red-200 dark:bg-red-950/30 dark:border-red-900 dark:text-red-400">
+          <div className="mx-4 mt-3 rounded-xl bg-red-50 p-2.5 text-xs text-red-600 border border-red-200 dark:bg-red-950/30 dark:border-red-900 dark:text-red-400 shrink-0">
             {errorMsg}
           </div>
         )}
 
         {/* フォーム本体（スクロール領域） */}
-        <div className="flex-1 overflow-y-auto px-4 py-4 space-y-5">
+        <div className="flex-1 overflow-y-auto px-4 py-4 space-y-5 pb-8">
           {/* 新規作成時のカスタムID入力欄（リスト形式のみ） */}
           {!isObject && !isEditing && (
             <div className="space-y-1.5 rounded-xl bg-slate-50 p-3 border border-slate-200/80 dark:bg-slate-900/60 dark:border-slate-800">
@@ -213,7 +226,7 @@ export const EditorDrawer: React.FC<Props> = ({
             </div>
           )}
         </div>
-        <div className="flex gap-2 border-t border-slate-100 px-4 py-3 dark:border-slate-800">
+        <div className="flex gap-2 border-t border-slate-100 bg-white/95 px-4 pt-3 pb-[max(0.75rem,env(safe-area-inset-bottom))] dark:border-slate-800 dark:bg-slate-900/95 backdrop-blur-xs shrink-0">
           <Button
             variant="outline"
             disabled={saving}
